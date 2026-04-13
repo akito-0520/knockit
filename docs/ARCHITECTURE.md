@@ -227,6 +227,8 @@ presets ||--o{ room_statuses : "referenced by"
 | label         | VARCHAR(50) | NOT NULL                       | ラベル (例: "面接中")        |
 | color         | VARCHAR(7)  | NOT NULL                       | カラーコード (例: "#EF4444") |
 | display_order | INT         | NOT NULL, DEFAULT 0            | 表示順                       |
+| created_at    | TIMESTAMPTZ | NOT NULL, DEFAULT NOW()        | 作成日時                     |
+| updated_at    | TIMESTAMPTZ | NOT NULL, DEFAULT NOW()        | 更新日時                     |
 
 #### room_statuses
 
