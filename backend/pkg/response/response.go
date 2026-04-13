@@ -52,7 +52,7 @@ func ValidationErrors(w http.ResponseWriter, errs []model.ValidationError) {
 	// response構造体を用いて JSONエンコード
 	json.NewEncoder(w).Encode(response{
 		Success: false,
-		Error: "validation error",
+		Error:   "validation error",
 		Details: errs,
 	})
 }

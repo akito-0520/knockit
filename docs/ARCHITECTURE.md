@@ -88,7 +88,7 @@
 │  Service (ビジネスロジック層)      │  ← ビジネスルール
 │  - ユーザーセットアップ           │
 │  - ステータス更新 + SSE通知       │
-│  - プリセット取得                │
+│  - プリセット CRUD + デフォルト作成│
 ├─────────────────────────────────┤
 │  Repository (データアクセス層)    │  ← DB操作
 │  - SQL クエリ実行                │
@@ -118,20 +118,21 @@ backend/
 │   ├── model/
 │   │   ├── user.go                 # User エンティティ + リクエスト/レスポンス型
 │   │   ├── status.go               # RoomStatus エンティティ + リクエスト/レスポンス型
-│   │   ├── preset.go               # Preset エンティティ + レスポンス型
+│   │   ├── preset.go               # Preset エンティティ + リクエスト/レスポンス型
 │   │   └── errors.go               # カスタムエラー定義 (ErrNotFound 等)
 │   ├── repository/
 │   │   ├── user_repository.go      # users テーブルの CRUD
 │   │   ├── status_repository.go    # room_statuses テーブルの CRUD (UPDATE方式)
-│   │   └── preset_repository.go    # presets テーブルの Read
+│   │   └── preset_repository.go    # presets テーブルの CRUD
 │   ├── service/
 │   │   ├── auth_service.go         # ユーザーセットアップ・プロフィール管理
 │   │   ├── status_service.go       # ステータス管理 + SSE クライアント管理
-│   │   └── preset_service.go       # プリセット取得
+│   │   └── preset_service.go       # プリセット CRUD + デフォルト作成
 │   ├── handler/
 │   │   ├── auth_handler.go         # POST /setup, GET /me, PUT /me
 │   │   ├── status_handler.go       # GET/PUT /status, GET /stream (SSE)
-│   │   └── preset_handler.go       # GET /presets, GET /health
+│   │   ├── preset_handler.go       # GET/POST/PUT/DELETE /presets
+│   │   └── health_handler.go      # GET /health
 │   ├── middleware/
 │   │   ├── auth.go                 # Supabase JWT 検証ミドルウェア
 │   │   ├── cors.go                 # CORS 設定ミドルウェア
@@ -142,7 +143,7 @@ backend/
 │   └── response/
 │       └── response.go             # HTTP レスポンスヘルパー (JSON/Error/ValidationErrors)
 ├── migrations/
-│   └── 001_create_tables.sql       # DB マイグレーション + 初期プリセットデータ
+│   └── 001_create_tables.sql       # DB マイグレーション (初期データはGoコード側)
 ├── Dockerfile                      # マルチステージビルド
 ├── docker-compose.yml              # 開発用 (API + PostgreSQL)
 ├── go.mod
@@ -204,6 +205,7 @@ frontend/
 
 ```
 users ||--o{ room_statuses : "has"
+users ||--o{ presets : "owns"
 presets ||--o{ room_statuses : "referenced by"
 ```
 
@@ -221,9 +223,12 @@ presets ||--o{ room_statuses : "referenced by"
 
 #### presets
 
+各ユーザーが自分専用のプリセットを管理する。ユーザー登録時にデフォルトプリセットがGoコードからINSERTされる。
+
 | カラム        | 型          | 制約                           | 説明                         |
 | ------------- | ----------- | ------------------------------ | ---------------------------- |
 | id            | UUID        | PK, DEFAULT uuid_generate_v4() | プリセットID                 |
+| user_id       | UUID        | FK → users(id), NOT NULL       | 所有ユーザーID               |
 | label         | VARCHAR(50) | NOT NULL                       | ラベル (例: "面接中")        |
 | color         | VARCHAR(7)  | NOT NULL                       | カラーコード (例: "#EF4444") |
 | display_order | INT         | NOT NULL, DEFAULT 0            | 表示順                       |
@@ -247,8 +252,11 @@ presets ||--o{ room_statuses : "referenced by"
 
 - `idx_room_statuses_user_id` ON room_statuses(user_id)
 - `idx_users_username` ON users(username)
+- `idx_presets_user_id` ON presets(user_id)
 
-### 5.3 初期プリセットデータ
+### 5.3 デフォルトプリセットデータ
+
+ユーザー登録時に Go コードからINSERTされる。DBにはテンプレート行を持たない。
 
 | label  | color            | display_order |
 | ------ | ---------------- | ------------- |
@@ -296,19 +304,22 @@ presets ||--o{ room_statuses : "referenced by"
 | メソッド | パス                             | 説明                         |
 | -------- | -------------------------------- | ---------------------------- |
 | GET      | /api/v1/health                   | ヘルスチェック               |
-| GET      | /api/v1/presets                  | プリセット一覧取得           |
 | GET      | /api/v1/status/{username}        | ユーザーの公開ステータス取得 |
 | GET      | /api/v1/status/{username}/stream | SSE リアルタイム配信         |
 
 #### 認証必須 (Authorization: Bearer {JWT})
 
-| メソッド | パス                    | 説明                   |
-| -------- | ----------------------- | ---------------------- |
-| POST     | /api/v1/users/me/setup  | 初回ユーザー名設定     |
-| GET      | /api/v1/users/me        | 自分のプロフィール取得 |
-| PUT      | /api/v1/users/me        | プロフィール更新       |
-| GET      | /api/v1/users/me/status | 自分のステータス取得   |
-| PUT      | /api/v1/users/me/status | ステータス更新         |
+| メソッド | パス                           | 説明                   |
+| -------- | ------------------------------ | ---------------------- |
+| POST     | /api/v1/users/me/setup         | 初回ユーザー名設定     |
+| GET      | /api/v1/users/me               | 自分のプロフィール取得 |
+| PUT      | /api/v1/users/me               | プロフィール更新       |
+| GET      | /api/v1/users/me/status        | 自分のステータス取得   |
+| PUT      | /api/v1/users/me/status        | ステータス更新         |
+| GET      | /api/v1/users/me/presets       | 自分のプリセット一覧   |
+| POST     | /api/v1/users/me/presets       | プリセット作成         |
+| PUT      | /api/v1/users/me/presets/{id}  | プリセット更新         |
+| DELETE   | /api/v1/users/me/presets/{id}  | プリセット削除         |
 
 ---
 

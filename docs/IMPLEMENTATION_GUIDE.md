@@ -105,8 +105,10 @@ type User struct {
 
 作成する型:
 
-- `Preset` — エンティティ (Label, Color, DisplayOrder)
-- `PresetResponse` + `ToResponse()` メソッド
+- `Preset` — エンティティ (UserID, Label, Color, DisplayOrder, CreatedAt, UpdatedAt)
+- `CreatePresetRequest` — プリセット作成用リクエスト (Label, Color, DisplayOrder)
+- `UpdatePresetRequest` — プリセット更新用リクエスト (Label, Color, DisplayOrder)
+- `PresetResponse` (ID, Label, Color, DisplayOrder) + `ToResponse()` メソッド
 
 #### errors.go
 
@@ -198,11 +200,11 @@ type Config struct {
 
 - `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 - `CREATE TABLE users` — id (UUID PK), username (UNIQUE), display_name, created_at, updated_at
-- `CREATE TABLE presets` — id (UUID PK DEFAULT uuid_generate_v4()), label, color, display_order
+- `CREATE TABLE presets` — id (UUID PK DEFAULT uuid_generate_v4()), user_id (FK, NOT NULL), label, color, display_order, created_at, updated_at
 - `CREATE TABLE room_statuses` — id, user_id (FK, UNIQUE), preset_id (FK, NULL可), custom_message, updated_at
   - 1ユーザーにつき1行。ステータス更新時は UPDATE で上書き
-- インデックス: `idx_room_statuses_user_id`, `idx_users_username`
-- 初期プリセットデータ INSERT (面接中, 会議中, 勉強中, 作業中, 電話中, 入室OK)
+- インデックス: `idx_room_statuses_user_id`, `idx_users_username`, `idx_presets_user_id`
+- 初期プリセットデータは Go コード内にハードコードし、ユーザー登録時に INSERT する
 
 Supabase の **SQL Editor** でこの SQL を実行してテーブルを作成する。
 
@@ -248,10 +250,16 @@ query := `
 
 #### preset_repository.go
 
-| メソッド            | SQL                                   |
-| ------------------- | ------------------------------------- |
-| `FindAll(ctx)`      | SELECT ... ORDER BY display_order ASC |
-| `FindByID(ctx, id)` | SELECT ... WHERE id = $1              |
+各ユーザーが自分専用のプリセットを CRUD する。
+
+| メソッド                              | SQL                                                     |
+| ------------------------------------- | ------------------------------------------------------- |
+| `FindByUserID(ctx, userID)`           | SELECT ... WHERE user_id = $1 ORDER BY display_order ASC |
+| `FindByID(ctx, id)`                   | SELECT ... WHERE id = $1                                 |
+| `Create(ctx, preset)`                 | INSERT INTO presets ...                                  |
+| `Update(ctx, preset)`                 | UPDATE presets SET ... WHERE id = $1                     |
+| `Delete(ctx, id)`                     | DELETE FROM presets WHERE id = $1                        |
+| `CreateDefaultPresets(ctx, userID)`   | デフォルトプリセットを一括 INSERT (Go ハードコード)        |
 
 > **Go 学習ポイント**
 >
@@ -265,7 +273,7 @@ query := `
 
 - [ ] `go build ./...` がエラーなく通る
 - [ ] Supabase SQL Editor でテーブルが作成されている
-- [ ] Supabase の Table Editor でプリセットデータが 6 件入っている
+- [ ] presets テーブルが作成されている (データは空。ユーザー登録時に INSERT される)
 
 ---
 
@@ -277,7 +285,7 @@ query := `
 
 | メソッド                                         | ロジック                                               |
 | ------------------------------------------------ | ------------------------------------------------------ |
-| `SetupUser(ctx, supabaseUserID, req)` | ユーザー存在チェック → ユーザー名重複チェック → Create |
+| `SetupUser(ctx, supabaseUserID, req)` | ユーザー存在チェック → ユーザー名重複チェック → Create → デフォルトプリセット作成 |
 | `GetCurrentUser(ctx, userID)`                    | FindByID のラッパー                                    |
 | `UpdateUser(ctx, userID, req)`                   | FindByID → フィールド更新 → Update                     |
 
@@ -334,7 +342,15 @@ default:
 
 `internal/service/preset_service.go`:
 
-- `GetAllPresets(ctx)` — FindAll → 各要素を `ToResponse()` で変換
+| メソッド                                | 説明                                                       |
+| --------------------------------------- | ---------------------------------------------------------- |
+| `GetUserPresets(ctx, userID)`           | FindByUserID → 各要素を `ToResponse()` で変換               |
+| `CreatePreset(ctx, userID, req)`        | バリデーション → Create → レスポンス返却                     |
+| `UpdatePreset(ctx, userID, id, req)`    | FindByID → 所有者チェック → Update → レスポンス返却          |
+| `DeletePreset(ctx, userID, id)`         | FindByID → 所有者チェック → Delete                           |
+| `CreateDefaultPresets(ctx, userID)`     | デフォルトプリセットを一括作成 (ユーザーセットアップ時に呼ぶ) |
+
+所有者チェック: `preset.UserID != userID` なら `ErrForbidden` を返す
 
 ### Phase 3 の動作確認
 
@@ -436,9 +452,15 @@ for {
 }
 ```
 
-#### preset_handler.go
+#### preset_handler.go (認証必須)
 
-- `GetAll` — GET /api/v1/presets
+- `GetUserPresets` — GET /api/v1/users/me/presets
+- `CreatePreset` — POST /api/v1/users/me/presets
+- `UpdatePreset` — PUT /api/v1/users/me/presets/{id}
+- `DeletePreset` — DELETE /api/v1/users/me/presets/{id}
+
+#### health_handler.go
+
 - `Health` — GET /api/v1/health (ヘルスチェック)
 
 ### URLパスからのパラメータ取得
@@ -494,7 +516,6 @@ func main() {
 
     // 認証不要
     mux.HandleFunc("/api/v1/health", handler.Health)
-    mux.HandleFunc("/api/v1/presets", presetHandler.GetAll)
     mux.HandleFunc("/api/v1/status/", func(w http.ResponseWriter, r *http.Request) {
         // /stream で終わるなら SSE、そうでなければ公開ステータス
         if strings.HasSuffix(r.URL.Path, "/stream") {
@@ -507,6 +528,30 @@ func main() {
     // 認証必須
     mux.Handle("/api/v1/users/me/setup",
         authMW.Authenticate(http.HandlerFunc(authHandler.Setup)))
+    mux.Handle("/api/v1/users/me/presets/",
+        authMW.Authenticate(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            // /api/v1/users/me/presets/{id} の場合
+            if r.URL.Path != "/api/v1/users/me/presets/" && r.URL.Path != "/api/v1/users/me/presets" {
+                switch r.Method {
+                case http.MethodPut:
+                    presetHandler.UpdatePreset(w, r)
+                case http.MethodDelete:
+                    presetHandler.DeletePreset(w, r)
+                default:
+                    response.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
+                }
+                return
+            }
+            // /api/v1/users/me/presets の場合
+            switch r.Method {
+            case http.MethodGet:
+                presetHandler.GetUserPresets(w, r)
+            case http.MethodPost:
+                presetHandler.CreatePreset(w, r)
+            default:
+                response.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
+            }
+        })))
     mux.Handle("/api/v1/users/me/status",
         authMW.Authenticate(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
             switch r.Method {
@@ -555,14 +600,12 @@ go run ./cmd/server/
 curl http://localhost:8080/api/v1/health
 # → {"success":true,"data":{"status":"ok","service":"knockit-api"}}
 
-# プリセット取得
-curl http://localhost:8080/api/v1/presets
-# → {"success":true,"data":[{"id":"...","label":"面接中",...}, ...]}
 ```
 
 - [ ] ヘルスチェックが 200 を返す
-- [ ] プリセット一覧が 6 件返る
 - [ ] 存在しないユーザーのステータス取得が 404 を返す
+- [ ] JWT 付きで GET /api/v1/users/me/presets が空配列を返す (セットアップ前)
+- [ ] POST /api/v1/users/me/setup 後にプリセットが 6 件作成される
 
 ---
 
@@ -699,9 +742,10 @@ npm install @supabase/supabase-js @supabase/ssr
 **src/app/dashboard/page.tsx** (AuthGuard で保護):
 
 - 現在のステータスを `StatusCard` で表示
-- プリセット選択 (`StatusSelector` — 6つのボタンをグリッド表示)
+- プリセット選択 (`StatusSelector` — ボタンをグリッド表示)
 - カスタムメッセージ入力 (`CustomStatusInput`)
 - 更新ボタンで PUT /api/v1/users/me/status
+- プリセット管理 (追加・編集・削除)
 - 公開URL (`/{username}`) の共有リンク表示
 
 ### 6-5. 公開ステータスページ (SSE リアルタイム更新)
