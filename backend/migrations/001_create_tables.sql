@@ -24,7 +24,7 @@ CREATE TABLE presets (
 /* room_statusesテーブルの作成（1ユーザーにつき1行。ステータス更新時はUPDATEで上書き） */
 CREATE TABLE room_statuses (
     id             UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id        UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE, /* `ON DELETE CASCADE`を用いることで参照先が削除されたら自身も削除する */
+    user_id        UUID         UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE, /* `ON DELETE CASCADE`を用いることで参照先が削除されたら自身も削除する */
     preset_id      UUID         REFERENCES presets(id) ON DELETE SET NULL,              /* `ON DELETE SET NULL`を用いることで参照先が削除されたらNULLをセットする */
     custom_message VARCHAR(200),
     updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
