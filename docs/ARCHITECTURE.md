@@ -122,7 +122,7 @@ backend/
 │   │   └── errors.go               # カスタムエラー定義 (ErrNotFound 等)
 │   ├── repository/
 │   │   ├── user_repository.go      # users テーブルの CRUD
-│   │   ├── status_repository.go    # room_statuses テーブルの CRUD (トランザクション)
+│   │   ├── status_repository.go    # room_statuses テーブルの CRUD (UPDATE方式)
 │   │   └── preset_repository.go    # presets テーブルの Read
 │   ├── service/
 │   │   ├── auth_service.go         # ユーザーセットアップ・プロフィール管理
@@ -216,7 +216,6 @@ presets ||--o{ room_statuses : "referenced by"
 | id           | UUID         | PK               | Supabase Auth の user ID |
 | username     | VARCHAR(30)  | UNIQUE, NOT NULL | 公開URL用ユーザー名      |
 | display_name | VARCHAR(100) | NOT NULL         | 表示名                   |
-| avatar_url   | TEXT         | DEFAULT ''       | プロフィール画像URL      |
 | created_at   | TIMESTAMPTZ  | DEFAULT NOW()    | 作成日時                 |
 | updated_at   | TIMESTAMPTZ  | DEFAULT NOW()    | 更新日時                 |
 
@@ -226,36 +225,37 @@ presets ||--o{ room_statuses : "referenced by"
 | ------------- | ----------- | ------------------------------ | ---------------------------- |
 | id            | UUID        | PK, DEFAULT uuid_generate_v4() | プリセットID                 |
 | label         | VARCHAR(50) | NOT NULL                       | ラベル (例: "面接中")        |
-| emoji         | VARCHAR(10) | NOT NULL                       | 絵文字 (例: "🎤")            |
 | color         | VARCHAR(7)  | NOT NULL                       | カラーコード (例: "#EF4444") |
 | display_order | INT         | NOT NULL, DEFAULT 0            | 表示順                       |
 
 #### room_statuses
 
+1ユーザーにつき1行。ステータス更新時は UPDATE で上書きする。
+将来、履歴機能が必要になった場合は `status_histories` テーブルを別途追加する。
+
 | カラム         | 型           | 制約                           | 説明               |
 | -------------- | ------------ | ------------------------------ | ------------------ |
 | id             | UUID         | PK, DEFAULT uuid_generate_v4() | ステータスID       |
-| user_id        | UUID         | FK → users(id), NOT NULL       | ユーザーID         |
+| user_id        | UUID         | FK → users(id), UNIQUE, NOT NULL | ユーザーID (1ユーザー1行) |
 | preset_id      | UUID         | FK → presets(id), NULL可       | プリセットID       |
 | custom_message | VARCHAR(200) | DEFAULT ''                     | カスタムメッセージ |
-| is_active      | BOOLEAN      | DEFAULT true                   | アクティブフラグ   |
 | updated_at     | TIMESTAMPTZ  | DEFAULT NOW()                  | 更新日時           |
 
 #### インデックス
 
-- `idx_room_statuses_user_active` ON room_statuses(user_id, is_active)
+- `idx_room_statuses_user_id` ON room_statuses(user_id)
 - `idx_users_username` ON users(username)
 
 ### 5.3 初期プリセットデータ
 
-| label  | emoji | color            | display_order |
-| ------ | ----- | ---------------- | ------------- |
-| 面接中 | 🎤    | #EF4444 (赤)     | 1             |
-| 会議中 | 💼    | #F59E0B (黄)     | 2             |
-| 勉強中 | 📚    | #3B82F6 (青)     | 3             |
-| 作業中 | 💻    | #8B5CF6 (紫)     | 4             |
-| 電話中 | 📞    | #EC4899 (ピンク) | 5             |
-| 入室OK | ✅    | #10B981 (緑)     | 6             |
+| label  | color            | display_order |
+| ------ | ---------------- | ------------- |
+| 面接中 | #EF4444 (赤)     | 1             |
+| 会議中 | #F59E0B (黄)     | 2             |
+| 勉強中 | #3B82F6 (青)     | 3             |
+| 作業中 | #8B5CF6 (紫)     | 4             |
+| 電話中 | #EC4899 (ピンク) | 5             |
+| 入室OK | #10B981 (緑)     | 6             |
 
 ---
 

@@ -34,8 +34,9 @@ knockit/
 │   └── Dockerfile
 ├── frontend/          # Next.js アプリ
 │   └── src/
-├── ARCHITECTURE.md    # 設計ドキュメント
-└── IMPLEMENTATION_GUIDE.md  # 実装手順書
+└── docs/
+    ├── ARCHITECTURE.md          # 設計ドキュメント
+    └── IMPLEMENTATION_GUIDE.md  # 実装手順書
 ```
 
 ## 開発環境のセットアップ
@@ -131,14 +132,14 @@ npm run dev
 | バックエンド   | Render     | Free         |
 | データベース   | Supabase   | Free         |
 
-詳細な手順は [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) の Phase 7 を参照。
+詳細な手順は [IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) の Phase 7 を参照。
 
 ## ドキュメント
 
-| ファイル                                             | 内容                                               |
-| ---------------------------------------------------- | -------------------------------------------------- |
-| [ARCHITECTURE.md](./ARCHITECTURE.md)                 | 全体設計 (技術スタック, DB設計, API設計, 画面構成) |
-| [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) | 段階的な実装手順書 (Phase 0〜7)                    |
+| ファイル                                                       | 内容                                               |
+| -------------------------------------------------------------- | -------------------------------------------------- |
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md)                      | 全体設計 (技術スタック, DB設計, API設計, 画面構成) |
+| [IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md)      | 段階的な実装手順書 (Phase 0〜7)                    |
 
 ## ライセンス
 
