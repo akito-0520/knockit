@@ -29,6 +29,15 @@ func (s *PresetService) GetUserPresets(ctx context.Context, userID string) ([]mo
 	return presets, nil
 }
 
+func (s *PresetService) GetPresetByID(ctx context.Context, id string) (*model.Preset, error) {
+	preset, err := s.presetRepository.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return preset, nil
+}
+
 func (s *PresetService) CreatePreset(ctx context.Context, userID string, req model.CreatePresetRequest) (*model.Preset, error) {
 	// バリデーション
 	errs := validator.ValidateCreatePreset(req)
