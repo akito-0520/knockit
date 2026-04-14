@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/akito-0520/knockit/internal/middleware"
 	"github.com/akito-0520/knockit/internal/model"
 	"github.com/akito-0520/knockit/internal/service"
 	"github.com/akito-0520/knockit/pkg/response"
@@ -70,7 +71,7 @@ func (h *StatusHandler) GetPublicStatus(w http.ResponseWriter, r *http.Request) 
 
 func (h *StatusHandler) GetMyStatus(w http.ResponseWriter, r *http.Request) {
 	// 認証確認
-	userID, ok := r.Context().Value(UserIDKey).(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -117,7 +118,7 @@ func (h *StatusHandler) GetMyStatus(w http.ResponseWriter, r *http.Request) {
 
 func (h *StatusHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	// 認証確認
-	userID, ok := r.Context().Value(UserIDKey).(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return

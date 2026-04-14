@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/akito-0520/knockit/internal/middleware"
 	"github.com/akito-0520/knockit/internal/model"
 	"github.com/akito-0520/knockit/internal/service"
 	"github.com/akito-0520/knockit/pkg/response"
@@ -20,13 +21,9 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 	}
 }
 
-type contextKey string
-
-const UserIDKey contextKey = "user_id"
-
 func (h *AuthHandler) SetupUser(w http.ResponseWriter, r *http.Request) {
 	// 認証確認
-	userID, ok := r.Context().Value(UserIDKey).(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -59,7 +56,7 @@ func (h *AuthHandler) SetupUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	// 認証確認
-	userID, ok := r.Context().Value(UserIDKey).(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -83,7 +80,7 @@ func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// 認証確認
-	userID, ok := r.Context().Value(UserIDKey).(string)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok {
 		response.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
