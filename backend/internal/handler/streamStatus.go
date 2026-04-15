@@ -44,7 +44,24 @@ func (h *StatusHandler) StreamStatus(w http.ResponseWriter, r *http.Request) {
 			return
 
 		case status := <-ch: // ステータス更新
-			data, _ := json.Marshal(status)
+			// プリセットIDからプリセット情報を取得
+			var preset *model.Preset
+			if status.PresetID != "" {
+				preset, err = h.presetService.GetPresetByID(r.Context(), status.PresetID)
+				if err != nil {
+					continue
+				}
+			}
+
+			// ステータスレスポンスを組み立てる
+			res := model.StatusResponse{
+				CustomMessage: status.CustomMessage,
+			}
+			if preset != nil {
+				res.Preset = *preset
+			}
+
+			data, _ := json.Marshal(res)
 			fmt.Fprintf(w, "data: %s\n\n", data)
 			w.(http.Flusher).Flush()
 		}
