@@ -3,4 +3,13 @@ type UserResponse = {
   displayName: string;
 };
 
-export type { UserResponse };
+type SetupUserRequest = {
+  username: string;
+  displayName: string;
+};
+
+type UpdateUserRequest = {
+  displayName: string;
+};
+
+export type { UserResponse, SetupUserRequest, UpdateUserRequest };
