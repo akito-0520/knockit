@@ -1,8 +1,8 @@
-import { UpdateStatusRequest, StatusResponse } from "@/types/roomStatus";
+import { StatusResponse, UpdateStatusRequest } from "@/types/roomStatus";
 import { API_URL, authHeaders, unwrap } from ".";
 
 export const getPublicStatus = async (username: string) => {
-  const res = await fetch(`${API_URL}/status/${username}`, { method: "GET" });
+  const res = await fetch(`${API_URL}/status/${username}`);
   return unwrap<StatusResponse>(res);
 };
 

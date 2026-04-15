@@ -1,7 +1,7 @@
 import {
   CreatePresetRequest,
-  UpdatePresetRequest,
   PresetResponse,
+  UpdatePresetRequest,
 } from "@/types/preset";
 import { API_URL, authHeaders, unwrap } from ".";
 
