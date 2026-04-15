@@ -10,16 +10,16 @@ import (
 )
 
 type Config struct {
-	Port              int
-	DatabaseURL       string
-	SupabaseJWTSecret string
-	AllowedOrigins    []string
-	Environment       string
+	Port           int
+	DatabaseURL    string
+	SupabaseURL    string
+	AllowedOrigins []string
+	Environment    string
 }
 
 func Load() (*Config, error) {
 	_ = godotenv.Load()
-	
+
 	portStr := os.Getenv("PORT")
 	if portStr == "" {
 		portStr = "8080"
@@ -35,9 +35,9 @@ func Load() (*Config, error) {
 		return nil, errors.New("DATABASE_URL is required")
 	}
 
-	supabaseJWTSecret := os.Getenv("SUPABASE_JWT_SECRET")
-	if supabaseJWTSecret == "" {
-		return nil, errors.New("SUPABASE_JWT_SECRET is required")
+	supabaseURL := strings.TrimRight(os.Getenv("SUPABASE_URL"), "/")
+	if supabaseURL == "" {
+		return nil, errors.New("SUPABASE_URL is required")
 	}
 
 	allowedOriginsStr := os.Getenv("ALLOWED_ORIGINS")
@@ -52,10 +52,10 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		Port:              port,
-		DatabaseURL:       databaseURL,
-		SupabaseJWTSecret: supabaseJWTSecret,
-		AllowedOrigins:    allowedOrigins,
-		Environment:       environment,
+		Port:           port,
+		DatabaseURL:    databaseURL,
+		SupabaseURL:    supabaseURL,
+		AllowedOrigins: allowedOrigins,
+		Environment:    environment,
 	}, nil
 }

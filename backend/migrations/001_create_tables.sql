@@ -13,7 +13,7 @@ CREATE TABLE users (
 /* presetsテーブルの作成 */
 CREATE TABLE presets (
     id            UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id       UUID        UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE, /* `ON DELETE CASCADE`を用いることで参照先が削除されたら自身も削除する */
+    user_id       UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE, /* `ON DELETE CASCADE`を用いることで参照先が削除されたら自身も削除する */
     label         VARCHAR(50) NOT NULL,
     color         VARCHAR(7)  NOT NULL,
     display_order INT         NOT NULL DEFAULT 0,
@@ -32,4 +32,5 @@ CREATE TABLE room_statuses (
 
 /* インデックスを作成することで`WHERE`を用いた際などに索引のようにすぐ見つけることができる */
 CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_presets_user_id ON presets(user_id);
 CREATE INDEX idx_room_statuses_user_id ON room_statuses(user_id);

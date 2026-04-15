@@ -50,7 +50,11 @@ func main() {
 	presetHandler := handler.NewPresetHandler(presetService)
 
 	// ミドルウェアの初期化
-	authMiddleware := middleware.NewAuthMiddleware(cfg.SupabaseJWTSecret)
+	authMiddleware, err := middleware.NewAuthMiddleware(cfg.SupabaseURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	corsMiddleware := middleware.CORS(cfg.AllowedOrigins)
 
 	// ルーティングの設定
 	mux := http.NewServeMux()
@@ -73,7 +77,7 @@ func main() {
 
 	// サーバーの起動
 	log.Printf("Server starting on port %d", cfg.Port)
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), mux); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), corsMiddleware(mux)); err != nil {
 		log.Fatal(err)
 	}
 }
