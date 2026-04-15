@@ -146,6 +146,29 @@ func (h *StatusHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// プリセットIDからプリセット情報を取得
+	var preset *model.Preset
+	if status.PresetID != "" {
+		preset, err = h.presetService.GetPresetByID(r.Context(), status.PresetID)
+		if err != nil {
+			switch {
+			case errors.Is(err, model.ErrNotFound):
+				response.Error(w, http.StatusNotFound, "preset not found")
+			default:
+				response.Error(w, http.StatusInternalServerError, "internal server error")
+			}
+			return
+		}
+	}
+
+	// ステータスレスポンスを組み立てる
+	res := model.StatusResponse{
+		CustomMessage: status.CustomMessage,
+	}
+	if preset != nil {
+		res.Preset = *preset
+	}
+
 	// パーズしてレスポンスを返す
-	response.JSON(w, http.StatusOK, status)
+	response.JSON(w, http.StatusOK, res)
 }
