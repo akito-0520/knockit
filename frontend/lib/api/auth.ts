@@ -1,5 +1,9 @@
-import { SetupUserRequest, UpdateUserRequest } from "@/types/user";
-import { API_URL, authHeaders } from ".";
+import {
+  SetupUserRequest,
+  UpdateUserRequest,
+  UserResponse,
+} from "@/types/user";
+import { API_URL, authHeaders, unwrap } from ".";
 
 export const setupUser = async (token: string, req: SetupUserRequest) => {
   const res = await fetch(`${API_URL}/auth/setup`, {
@@ -10,8 +14,7 @@ export const setupUser = async (token: string, req: SetupUserRequest) => {
       display_name: req.displayName,
     }),
   });
-  if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-  return res.json();
+  return unwrap<UserResponse>(res);
 };
 
 export const getCurrentUser = async (token: string) => {
@@ -19,8 +22,7 @@ export const getCurrentUser = async (token: string) => {
     method: "GET",
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-  return res.json();
+  return unwrap<UserResponse>(res);
 };
 
 export const updateUser = async (token: string, req: UpdateUserRequest) => {
@@ -31,6 +33,5 @@ export const updateUser = async (token: string, req: UpdateUserRequest) => {
       display_name: req.displayName,
     }),
   });
-  if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-  return res.json();
+  return unwrap<UserResponse>(res);
 };

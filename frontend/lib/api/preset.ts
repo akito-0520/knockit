@@ -1,13 +1,16 @@
-import { CreatePresetRequest, UpdatePresetRequest } from "@/types/preset";
-import { API_URL, authHeaders } from ".";
+import {
+  CreatePresetRequest,
+  UpdatePresetRequest,
+  PresetResponse,
+} from "@/types/preset";
+import { API_URL, authHeaders, unwrap } from ".";
 
 export const getUserPresets = async (token: string) => {
   const res = await fetch(`${API_URL}/presets`, {
     method: "GET",
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-  return res.json();
+  return unwrap<PresetResponse[]>(res);
 };
 
 export const createPreset = async (token: string, req: CreatePresetRequest) => {
@@ -20,8 +23,7 @@ export const createPreset = async (token: string, req: CreatePresetRequest) => {
       display_order: req.displayOrder,
     }),
   });
-  if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-  return res.json();
+  return unwrap<PresetResponse>(res);
 };
 
 export const updatePreset = async (
@@ -38,8 +40,7 @@ export const updatePreset = async (
       display_order: req.displayOrder,
     }),
   });
-  if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-  return res.json();
+  return unwrap<PresetResponse>(res);
 };
 
 export const deletePreset = async (token: string, id: string) => {

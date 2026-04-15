@@ -12,8 +12,8 @@ type StatusResponse = {
 };
 
 type UpdateStatusRequest = {
-  presetId: string;
-  customMessage: string;
+  presetId?: string;
+  customMessage?: string;
 };
 
 export type { RoomStatusResponse, StatusResponse, UpdateStatusRequest };

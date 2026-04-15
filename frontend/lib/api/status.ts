@@ -1,10 +1,9 @@
-import { UpdateStatusRequest } from "@/types/roomStatus";
-import { API_URL, authHeaders } from ".";
+import { UpdateStatusRequest, StatusResponse } from "@/types/roomStatus";
+import { API_URL, authHeaders, unwrap } from ".";
 
 export const getPublicStatus = async (username: string) => {
   const res = await fetch(`${API_URL}/status/${username}`, { method: "GET" });
-  if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-  return res.json();
+  return unwrap<StatusResponse>(res);
 };
 
 export const getMyStatus = async (token: string) => {
@@ -12,8 +11,7 @@ export const getMyStatus = async (token: string) => {
     method: "GET",
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-  return res.json();
+  return unwrap<StatusResponse>(res);
 };
 
 export const updateStatus = async (token: string, req: UpdateStatusRequest) => {
@@ -25,6 +23,5 @@ export const updateStatus = async (token: string, req: UpdateStatusRequest) => {
       custom_message: req.customMessage,
     }),
   });
-  if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-  return res.json();
+  return unwrap<StatusResponse>(res);
 };

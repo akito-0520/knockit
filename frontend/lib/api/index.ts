@@ -6,3 +6,12 @@ export const authHeaders = (token: string) => ({
   "Content-Type": "application/json",
   Authorization: `Bearer ${token}`,
 });
+
+// バックエンドの {success, data, error} ラッパを剥がして data のみを返す
+export const unwrap = async <T>(res: Response): Promise<T> => {
+  const json = await res.json();
+  if (!res.ok || json?.success === false) {
+    throw new Error(json?.error ?? `HTTP error: ${res.status}`);
+  }
+  return json.data as T;
+};
