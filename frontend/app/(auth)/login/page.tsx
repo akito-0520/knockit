@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +22,16 @@ export default function LoginPage() {
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-3">
+          <Link href="/" className="inline-block hover:opacity-80 transition">
+            <Image
+              src="/icon.png"
+              alt="Knockit"
+              width={64}
+              height={64}
+              className="mx-auto"
+              priority
+            />
+          </Link>
           <Link
             href="/"
             className="inline-block text-4xl font-bold tracking-tight hover:opacity-80 transition"
