@@ -85,7 +85,6 @@ export default function StatusCard({ token, presets, initialStatus }: Props) {
                     type="button"
                     onClick={() => {
                       setValue("presetId", preset.id);
-                      setValue("customMessage", "");
                     }}
                     className={`px-4 py-2 rounded-full text-white font-medium transition ${
                       selectedPresetId === preset.id
@@ -107,10 +106,6 @@ export default function StatusCard({ token, presets, initialStatus }: Props) {
             <Input
               {...register("customMessage")}
               placeholder="自由にメッセージを入力"
-              onChange={(e) => {
-                setValue("customMessage", e.target.value);
-                if (e.target.value) setValue("presetId", "");
-              }}
             />
           </div>
 
