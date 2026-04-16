@@ -37,6 +37,7 @@ export default function PresetList({ token, initialPresets }: Props) {
   });
 
   const isAtLimit = presets.length >= MAX_PRESETS;
+  const isAtMin = presets.length <= 1;
 
   const onSubmit = async (data: PresetFormValue) => {
     if (isAtLimit) return;
@@ -47,6 +48,7 @@ export default function PresetList({ token, initialPresets }: Props) {
   };
 
   const handleDelete = async (id: string) => {
+    if (presets.length <= 1) return;
     if (!confirm("このプリセットを削除しますか？")) return;
     await deletePreset(token, id);
     setPresets(presets.filter((p) => p.id !== id));
@@ -159,6 +161,12 @@ export default function PresetList({ token, initialPresets }: Props) {
                         size="icon"
                         onClick={() => handleDelete(preset.id)}
                         aria-label="削除"
+                        disabled={isAtMin}
+                        title={
+                          isAtMin
+                            ? "最後のプリセットは削除できません"
+                            : undefined
+                        }
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
