@@ -38,9 +38,9 @@ export default async function PublicStatusPage({ params }: Props) {
   if (!status) notFound();
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6">
-      <div className="max-w-md w-full">
-        <h1 className="text-2xl font-bold mb-6 text-center">
+    <main className="h-[calc(100dvh-3.5rem)] overflow-hidden flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-md md:max-w-2xl lg:max-w-3xl">
+        <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-6 md:mb-10 text-center">
           {status.displayName} の今
         </h1>
         <PublicStatusCard username={username} initialStatus={status} />

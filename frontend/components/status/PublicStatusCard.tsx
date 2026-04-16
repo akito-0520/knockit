@@ -27,17 +27,19 @@ export default function PublicStatusCard({ username, initialStatus }: Props) {
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
+      <CardContent className="pt-6 md:pt-10 space-y-4 md:space-y-6">
         {status.preset?.label && (
           <div
-            className="px-6 py-4 rounded-lg text-white text-center text-xl font-bold"
+            className="px-6 py-4 md:px-10 md:py-10 lg:py-14 rounded-lg text-white text-center text-xl md:text-4xl lg:text-6xl font-bold"
             style={{ backgroundColor: status.preset.color }}
           >
             {status.preset.label}
           </div>
         )}
         {status.customMessage && (
-          <p className="text-center text-lg">{status.customMessage}</p>
+          <p className="text-center text-lg md:text-2xl lg:text-3xl">
+            {status.customMessage}
+          </p>
         )}
       </CardContent>
     </Card>
