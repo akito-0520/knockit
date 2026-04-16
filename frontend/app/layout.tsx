@@ -21,17 +21,17 @@ export const metadata: Metadata = {
     ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
     : undefined,
   title: {
-    default: "Knockit",
+    default: "knockit",
     template: "%s | Knockit",
   },
   description: "家族にあなたの今を、そっと伝える。",
   openGraph: {
     title: {
-      default: "Knockit",
+      default: "knockit",
       template: "%s | Knockit",
     },
     description: "家族にあなたの今を、そっと伝える。",
-    siteName: "Knockit",
+    siteName: "knockit",
     locale: "ja_JP",
     type: "website",
   },

@@ -36,7 +36,7 @@ export default function LoginPage() {
             href="/"
             className="inline-block text-4xl font-bold tracking-tight hover:opacity-80 transition"
           >
-            Knockit
+            knockit
           </Link>
           <p className="text-sm text-muted-foreground">
             家族にあなたの今を、そっと伝える。

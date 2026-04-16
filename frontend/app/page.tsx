@@ -9,12 +9,12 @@ export default function Home() {
         <Image
           src="/icon.png"
           alt="Knockit"
-          width={96}
-          height={96}
-          className="mx-auto"
+          width={192}
+          height={192}
+          className="mx-auto w-24 h-24 sm:w-36 sm:h-36 md:w-48 md:h-48"
           priority
         />
-        <h1 className="text-5xl font-bold">Knockit</h1>
+        <h1 className="text-5xl font-bold">knockit</h1>
         <p className="text-lg text-muted-foreground">
           家族にあなたの今を、そっと伝える。
         </p>
