@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Pencil, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -18,9 +18,13 @@ type Props = {
   initialPresets: PresetResponse[];
 };
 
+const MAX_PRESETS = 10;
+
 export default function PresetList({ token, initialPresets }: Props) {
   const [presets, setPresets] = useState(initialPresets);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingLabel, setEditingLabel] = useState("");
 
   const {
     register,
@@ -32,7 +36,10 @@ export default function PresetList({ token, initialPresets }: Props) {
     defaultValues: { color: "#3B82F6", displayOrder: presets.length },
   });
 
+  const isAtLimit = presets.length >= MAX_PRESETS;
+
   const onSubmit = async (data: PresetFormValue) => {
+    if (isAtLimit) return;
     const created = await createPreset(token, data);
     setPresets([...presets, created]);
     reset({ color: "#3B82F6", displayOrder: presets.length + 1 });
@@ -54,6 +61,31 @@ export default function PresetList({ token, initialPresets }: Props) {
     setPresets(presets.map((p) => (p.id === preset.id ? updated : p)));
   };
 
+  const startEdit = (preset: PresetResponse) => {
+    setEditingId(preset.id);
+    setEditingLabel(preset.label);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingLabel("");
+  };
+
+  const saveEdit = async (preset: PresetResponse) => {
+    const label = editingLabel.trim();
+    if (!label || label === preset.label) {
+      cancelEdit();
+      return;
+    }
+    const updated = await updatePreset(token, preset.id, {
+      label,
+      color: preset.color,
+      displayOrder: preset.displayOrder,
+    });
+    setPresets(presets.map((p) => (p.id === preset.id ? updated : p)));
+    cancelEdit();
+  };
+
   return (
     <div className="flex flex-col gap-3 min-h-0 flex-1">
       <div className="flex-1 min-h-0 overflow-y-auto border rounded-lg bg-card">
@@ -63,34 +95,86 @@ export default function PresetList({ token, initialPresets }: Props) {
           </p>
         ) : (
           <ul className="divide-y">
-            {presets.map((preset) => (
-              <li
-                key={preset.id}
-                className="flex items-center gap-3 px-4 py-2.5"
-              >
-                <input
-                  type="color"
-                  value={preset.color}
-                  onChange={(e) => handleColorChange(preset, e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer shrink-0"
-                />
-                <span className="flex-1 font-medium truncate">
-                  {preset.label}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(preset.id)}
+            {presets.map((preset) => {
+              const isEditing = editingId === preset.id;
+              return (
+                <li
+                  key={preset.id}
+                  className="flex items-center gap-3 px-4 py-2.5"
                 >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </li>
-            ))}
+                  <input
+                    type="color"
+                    value={preset.color}
+                    onChange={(e) => handleColorChange(preset, e.target.value)}
+                    className="w-8 h-8 rounded cursor-pointer shrink-0"
+                  />
+                  {isEditing ? (
+                    <Input
+                      autoFocus
+                      value={editingLabel}
+                      onChange={(e) => setEditingLabel(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveEdit(preset);
+                        if (e.key === "Escape") cancelEdit();
+                      }}
+                      className="flex-1 h-8"
+                      maxLength={20}
+                    />
+                  ) : (
+                    <span className="flex-1 font-medium truncate">
+                      {preset.label}
+                    </span>
+                  )}
+                  {isEditing ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => saveEdit(preset)}
+                        aria-label="保存"
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={cancelEdit}
+                        aria-label="キャンセル"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => startEdit(preset)}
+                        aria-label="編集"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(preset.id)}
+                        aria-label="削除"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
 
-      <div className={cn("shrink-0", isAdding && "")}>
+      <div className={cn("shrink-0 space-y-2", isAdding && "")}>
+        <p className="text-xs text-muted-foreground text-right">
+          {presets.length} / {MAX_PRESETS}
+        </p>
         {isAdding ? (
           <Card>
             <CardContent className="pt-6">
@@ -132,9 +216,12 @@ export default function PresetList({ token, initialPresets }: Props) {
             variant="outline"
             className="w-full"
             onClick={() => setIsAdding(true)}
+            disabled={isAtLimit}
           >
             <Plus className="w-4 h-4 mr-2" />
-            プリセットを追加
+            {isAtLimit
+              ? `上限（${MAX_PRESETS}件）に達しています`
+              : "プリセットを追加"}
           </Button>
         )}
       </div>
