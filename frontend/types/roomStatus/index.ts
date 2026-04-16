@@ -7,6 +7,7 @@ type RoomStatusResponse = {
 };
 
 type StatusResponse = {
+  displayName: string;
   preset: PresetResponse;
   customMessage: string;
 };

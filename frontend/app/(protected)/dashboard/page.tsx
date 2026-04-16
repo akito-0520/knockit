@@ -52,6 +52,8 @@ export default async function DashboardPage() {
           共有用URL：
           <Link
             href={`/${currentUser.username}`}
+            target="_blank"
+            rel="noopener"
             className="ml-2 underline text-primary"
           >
             /{currentUser.username}

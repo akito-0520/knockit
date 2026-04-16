@@ -16,7 +16,7 @@ export default async function PublicStatusPage({ params }: Props) {
     <main className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full">
         <h1 className="text-2xl font-bold mb-6 text-center">
-          @{username} の今
+          {status.displayName} の今
         </h1>
         <PublicStatusCard username={username} initialStatus={status} />
       </div>
