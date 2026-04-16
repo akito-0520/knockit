@@ -89,8 +89,8 @@ export default function PresetList({ token, initialPresets }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-3 min-h-0 flex-1">
-      <div className="flex-1 min-h-0 overflow-y-auto border rounded-lg bg-card">
+    <div className="flex flex-col gap-3 md:min-h-0 md:flex-1">
+      <div className="border rounded-lg bg-card md:flex-1 md:min-h-0 md:overflow-y-auto">
         {presets.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">
             プリセットがありません
@@ -179,7 +179,7 @@ export default function PresetList({ token, initialPresets }: Props) {
         )}
       </div>
 
-      <div className={cn("shrink-0 space-y-2", isAdding && "")}>
+      <div className={cn("space-y-2 md:shrink-0", isAdding && "")}>
         <p className="text-xs text-muted-foreground text-right">
           {presets.length} / {MAX_PRESETS}
         </p>

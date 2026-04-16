@@ -31,7 +31,7 @@ export default async function SettingsPage() {
   if (!currentUser) redirect("/setup");
 
   return (
-    <main className="h-[calc(100dvh-3.5rem)] p-6 max-w-2xl mx-auto w-full flex flex-col overflow-hidden">
+    <main className="p-6 max-w-2xl mx-auto w-full min-h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-3.5rem)] md:min-h-0 md:flex md:flex-col md:overflow-hidden">
       <div className="flex items-center justify-between mb-6 shrink-0">
         <h1 className="text-3xl font-bold">設定</h1>
         <Link href="/dashboard">
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
         <ProfileForm token={token} initialUser={currentUser} />
       </section>
 
-      <section className="flex flex-col min-h-0 flex-1 space-y-3 mb-6">
+      <section className="space-y-3 mb-6 md:flex md:flex-col md:min-h-0 md:flex-1">
         <h2 className="text-xl font-semibold shrink-0">プリセット</h2>
         <PresetList token={token} initialPresets={presets} />
       </section>
