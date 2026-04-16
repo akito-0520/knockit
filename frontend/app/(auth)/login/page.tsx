@@ -22,13 +22,13 @@ export default function LoginPage() {
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-3">
-          <Link href="/" className="inline-block hover:opacity-80 transition">
+          <Link href="/" className="block hover:opacity-80 transition">
             <Image
               src="/icon.png"
               alt="Knockit"
-              width={64}
-              height={64}
-              className="mx-auto"
+              width={192}
+              height={192}
+              className="mx-auto w-24 h-24 sm:w-36 sm:h-36 md:w-48 md:h-48"
               priority
             />
           </Link>
