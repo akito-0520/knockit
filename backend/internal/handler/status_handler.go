@@ -28,7 +28,7 @@ func (h *StatusHandler) GetPublicStatus(w http.ResponseWriter, r *http.Request) 
 	username := r.PathValue("username")
 
 	// ユーザー名から公開ステータスを取得
-	status, err := h.statusService.GetStatusByUsername(r.Context(), username)
+	status, user, err := h.statusService.GetStatusByUsername(r.Context(), username)
 	if err != nil {
 		switch {
 		case errors.Is(err, model.ErrNotFound):
@@ -59,6 +59,7 @@ func (h *StatusHandler) GetPublicStatus(w http.ResponseWriter, r *http.Request) 
 
 	// ステータスレスポンスを組み立てる
 	res := model.StatusResponse{
+		DisplayName:   user.DisplayName,
 		CustomMessage: status.CustomMessage,
 	}
 	if preset != nil {
@@ -89,6 +90,18 @@ func (h *StatusHandler) GetMyStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ユーザー情報の取得
+	user, err := h.statusService.GetUserByID(r.Context(), userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, model.ErrNotFound):
+			response.Error(w, http.StatusNotFound, "user not found")
+		default:
+			response.Error(w, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+
 	// プリセットIDからプリセット情報を取得
 	var preset *model.Preset
 	if status.PresetID != "" {
@@ -106,6 +119,7 @@ func (h *StatusHandler) GetMyStatus(w http.ResponseWriter, r *http.Request) {
 
 	// ステータスレスポンスを組み立てる
 	res := model.StatusResponse{
+		DisplayName:   user.DisplayName,
 		CustomMessage: status.CustomMessage,
 	}
 	if preset != nil {
@@ -146,6 +160,18 @@ func (h *StatusHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ユーザー情報の取得
+	user, err := h.statusService.GetUserByID(r.Context(), userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, model.ErrNotFound):
+			response.Error(w, http.StatusNotFound, "user not found")
+		default:
+			response.Error(w, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+
 	// プリセットIDからプリセット情報を取得
 	var preset *model.Preset
 	if status.PresetID != "" {
@@ -163,6 +189,7 @@ func (h *StatusHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 
 	// ステータスレスポンスを組み立てる
 	res := model.StatusResponse{
+		DisplayName:   user.DisplayName,
 		CustomMessage: status.CustomMessage,
 	}
 	if preset != nil {

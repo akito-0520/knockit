@@ -20,7 +20,7 @@ func (h *StatusHandler) StreamStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 
 	// ステータス情報の取得
-	status, err := h.statusService.GetStatusByUsername(r.Context(), username)
+	status, user, err := h.statusService.GetStatusByUsername(r.Context(), username)
 	if err != nil {
 		switch {
 		case errors.Is(err, model.ErrNotFound):
@@ -55,6 +55,7 @@ func (h *StatusHandler) StreamStatus(w http.ResponseWriter, r *http.Request) {
 
 			// ステータスレスポンスを組み立てる
 			res := model.StatusResponse{
+				DisplayName:   user.DisplayName,
 				CustomMessage: status.CustomMessage,
 			}
 			if preset != nil {

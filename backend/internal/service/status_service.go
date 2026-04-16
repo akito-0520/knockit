@@ -27,26 +27,30 @@ func NewStatusService(statusRepo *repository.StatusRepository, userRepo *reposit
 	}
 }
 
-func (s *StatusService) GetStatusByUsername(ctx context.Context, username string) (*model.RoomStatus, error) {
+func (s *StatusService) GetStatusByUsername(ctx context.Context, username string) (*model.RoomStatus, *model.User, error) {
 	// バリデーション
 	errs := validator.ValidateUsername(username)
 	if len(errs) > 0 {
-		return nil, model.ErrValidation
+		return nil, nil, model.ErrValidation
 	}
 
 	// ユーザーネームからユーザー情報を取得
 	user, err := s.userRepository.FindByUsername(ctx, username)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// ユーザーIDからステータスを取得
 	status, err := s.statusRepository.FindByUserID(ctx, user.ID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return status, nil
+	return status, user, nil
+}
+
+func (s *StatusService) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
+	return s.userRepository.FindByID(ctx, userID)
 }
 
 func (s *StatusService) GetMyStatus(ctx context.Context, userID string) (*model.RoomStatus, error) {
