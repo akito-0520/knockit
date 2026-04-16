@@ -28,7 +28,7 @@ export default function LoginPage() {
               alt="Knockit"
               width={192}
               height={192}
-              className="mx-auto w-24 h-24 sm:w-36 sm:h-36 md:w-48 md:h-48"
+              className="mx-auto w-40 h-40 sm:w-44 sm:h-44 md:w-48 md:h-48"
               priority
             />
           </Link>
