@@ -12,8 +12,8 @@
 
 ### ユースケース
 
-1. ユーザーがOAuthでログインし、ユーザー名を設定する
-2. 管理画面でプリセット（面接中・会議中など）またはカスタムメッセージでステータスを更新する
+1. ユーザーがGoogle OAuthでログインし、ユーザー名・表示名を設定する
+2. ダッシュボードでプリセット（面接中・会議中など）またはカスタムメッセージでステータスを更新する
 3. 家族は専用端末（タブレットなど）で公開URLを常時表示しておく
 4. ステータスが変更されると、SSE (Server-Sent Events) で即座に画面が更新される
 
@@ -23,14 +23,15 @@
 
 | レイヤー       | 技術                                      | 選定理由                                       |
 | -------------- | ----------------------------------------- | ---------------------------------------------- |
-| フロントエンド | Next.js (App Router) + TypeScript         | SSR/SSG対応、ファイルベースルーティング        |
-| UIライブラリ   | shadcn UI + Tailwind CSS                  | コンポーネントアーキテクチャ、レスポンシブ対応 |
+| フロントエンド | Next.js 16 (App Router) + TypeScript      | SSR/SSG対応、ファイルベースルーティング         |
+| UIライブラリ   | shadcn UI + Tailwind CSS v4               | コンポーネントアーキテクチャ、レスポンシブ対応  |
+| バリデーション | Zod + react-hook-form                     | スキーマベースのバリデーション                  |
 | バックエンド   | Go 1.22+ 標準ライブラリ (net/http)        | Go学習目的、フレームワーク不使用               |
 | データベース   | PostgreSQL (Supabase)                     | 無料枠あり、マネージドサービス                 |
-| 認証           | Supabase Auth (OAuth: Google/GitHub)      | フロントでOAuth → Go側でJWT検証                |
+| 認証           | Supabase Auth (Google OAuth)              | フロントでOAuth → Go側でJWT検証                |
 | リアルタイム   | Server-Sent Events (SSE)                  | 標準ライブラリのみで実装可能、単方向配信に最適 |
 | コンテナ       | Docker / Docker Compose                   | 開発環境の統一                                 |
-| デプロイ       | Vercel (フロント) / Render (バックエンド) | 無料枠の範囲で運用                             |
+| デプロイ       | Fly.io (バックエンド)                     | リージョン nrt (東京) で低レイテンシ           |
 
 ---
 
@@ -40,12 +41,13 @@
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌────────────────┐
-│  Next.js (Vercel)│────▶│  Go API (Render)  │────▶│ PostgreSQL     │
+│  Next.js         │────▶│  Go API (Fly.io) │────▶│ PostgreSQL     │
 │                  │     │                   │     │ (Supabase)     │
-│  - 管理画面      │     │  - REST API       │     │                │
-│  - 公開ページ    │     │  - SSE 配信       │     │  - users       │
-│  - OAuth 認証    │     │  - JWT 検証       │     │  - room_statuses│
-│                  │     │                   │     │  - presets     │
+│  - トップページ  │     │  - REST API       │     │                │
+│  - ダッシュボード│     │  - SSE 配信       │     │  - users       │
+│  - 設定画面      │     │  - JWT 検証       │     │  - room_statuses│
+│  - 公開ページ    │     │                   │     │  - presets     │
+│                  │     │                   │     │                │
 │  Supabase Auth ──┼─JWT─▶  JWT 検証         │     │                │
 └─────────────────┘     └──────────────────┘     └────────────────┘
         │                        │
@@ -57,7 +59,7 @@
 ### 3.2 認証フロー
 
 ```
-ユーザー → Next.js → Supabase Auth (OAuth: Google/GitHub)
+ユーザー → Next.js → Supabase Auth (Google OAuth)
                           │
                           ▼
                     JWT (Access Token) 発行
@@ -66,7 +68,7 @@
               Next.js → Authorization: Bearer <JWT> → Go API
                                                         │
                                                         ▼
-                                              JWT Secret で検証
+                                              Supabase JWKS で検証
                                               claims["sub"] = ユーザーID
 ```
 
@@ -83,7 +85,7 @@
 │  - レスポンス返却                │
 ├─────────────────────────────────┤
 │  Middleware                      │  ← 横断的関心事
-│  - JWT認証, CORS, ロギング       │
+│  - JWT認証 (JWKS), CORS          │
 ├─────────────────────────────────┤
 │  Service (ビジネスロジック層)      │  ← ビジネスルール
 │  - ユーザーセットアップ           │
@@ -109,9 +111,7 @@
 
 ```
 backend/
-├── cmd/
-│   └── server/
-│       └── main.go                 # エントリーポイント (DI・ルーティング・サーバー起動)
+├── main.go                         # エントリーポイント (DI・ルーティング・サーバー起動)
 ├── internal/
 │   ├── config/
 │   │   └── config.go               # 環境変数から設定を読み込み
@@ -119,35 +119,33 @@ backend/
 │   │   ├── user.go                 # User エンティティ + リクエスト/レスポンス型
 │   │   ├── status.go               # RoomStatus エンティティ + リクエスト/レスポンス型
 │   │   ├── preset.go               # Preset エンティティ + リクエスト/レスポンス型
-│   │   └── errors.go               # カスタムエラー定義 (ErrNotFound 等)
+│   │   └── error.go                # カスタムエラー定義 (ErrNotFound 等)
 │   ├── repository/
 │   │   ├── user_repository.go      # users テーブルの CRUD
-│   │   ├── status_repository.go    # room_statuses テーブルの CRUD (UPDATE方式)
+│   │   ├── status_repository.go    # room_statuses テーブルの CRUD (UPSERT方式)
 │   │   └── preset_repository.go    # presets テーブルの CRUD
 │   ├── service/
 │   │   ├── auth_service.go         # ユーザーセットアップ・プロフィール管理
 │   │   ├── status_service.go       # ステータス管理 + SSE クライアント管理
 │   │   └── preset_service.go       # プリセット CRUD + デフォルト作成
 │   ├── handler/
-│   │   ├── auth_handler.go         # POST /setup, GET /me, PUT /me
-│   │   ├── status_handler.go       # GET/PUT /status, GET /stream (SSE)
-│   │   ├── preset_handler.go       # GET/POST/PUT/DELETE /presets
-│   │   └── health_handler.go      # GET /health
+│   │   ├── auth_handler.go         # POST /auth/setup, GET /auth/me, PATCH /auth/me
+│   │   ├── status_handler.go       # GET/PUT /status/me, GET /status/{username}
+│   │   ├── streamStatus.go         # GET /status/{username}/stream (SSE)
+│   │   └── preset_handler.go       # GET/POST/PATCH/DELETE /presets
 │   ├── middleware/
-│   │   ├── auth.go                 # Supabase JWT 検証ミドルウェア
-│   │   ├── cors.go                 # CORS 設定ミドルウェア
-│   │   └── logging.go              # リクエストログ出力ミドルウェア
+│   │   ├── auth.go                 # Supabase JWKS による JWT 検証ミドルウェア
+│   │   └── cors.go                 # CORS 設定ミドルウェア
 │   └── validator/
 │       └── validator.go            # 入力バリデーション (正規表現ベース)
 ├── pkg/
 │   └── response/
 │       └── response.go             # HTTP レスポンスヘルパー (JSON/Error/ValidationErrors)
 ├── migrations/
-│   └── 001_create_tables.sql       # DB マイグレーション (初期データはGoコード側)
+│   └── 001_create_tables.sql       # DB マイグレーション
+├── fly.toml                        # Fly.io デプロイ設定
 ├── Dockerfile                      # マルチステージビルド
-├── docker-compose.yml              # 開発用 (API + PostgreSQL)
 ├── go.mod
-├── go.sum
 └── .env.example                    # 環境変数テンプレート
 ```
 
@@ -155,45 +153,58 @@ backend/
 
 ```
 frontend/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx                 # ランディングページ (サービス説明 + ログイン)
+├── app/
+│   ├── layout.tsx                   # ルートレイアウト (OGPメタデータ)
+│   ├── page.tsx                     # トップページ (サービス説明 + はじめるボタン)
+│   ├── (auth)/
 │   │   ├── login/
-│   │   │   └── page.tsx             # ログインページ (OAuth ボタン)
-│   │   ├── auth/
-│   │   │   └── callback/
-│   │   │       └── route.ts         # OAuth コールバック処理
+│   │   │   └── page.tsx             # ログインページ (Google OAuth)
+│   │   └── setup/
+│   │       └── page.tsx             # 初回セットアップ (ユーザー名・表示名設定)
+│   ├── (protected)/
 │   │   ├── dashboard/
-│   │   │   └── page.tsx             # 管理画面 (ステータス変更・プロフィール設定)
-│   │   ├── [username]/
-│   │   │   └── page.tsx             # 公開ステータスページ (SSE リアルタイム更新)
-│   │   └── layout.tsx               # ルートレイアウト
-│   ├── components/
-│   │   ├── ui/                      # shadcn UI コンポーネント (自動生成)
-│   │   ├── status/
-│   │   │   ├── StatusCard.tsx       # ステータス表示カード (公開ページ用)
-│   │   │   ├── StatusSelector.tsx   # プリセット選択グリッド (管理画面用)
-│   │   │   ├── StatusBadge.tsx      # ステータスバッジ (小さい表示)
-│   │   │   └── CustomStatusInput.tsx # カスタムメッセージ入力
-│   │   ├── auth/
-│   │   │   ├── LoginButton.tsx      # OAuth ログインボタン
-│   │   │   └── AuthGuard.tsx        # 認証ガードラッパー
-│   │   └── layout/
-│   │       ├── Header.tsx           # ヘッダー
-│   │       └── Footer.tsx           # フッター
-│   ├── lib/
-│   │   ├── supabase.ts              # Supabase ブラウザクライアント初期化
-│   │   └── api.ts                   # バックエンド API 呼び出しヘルパー
-│   ├── hooks/
-│   │   ├── useAuth.ts               # 認証フック (login/logout/session)
-│   │   ├── useStatus.ts             # ステータス取得・更新フック
-│   │   └── useStatusStream.ts       # SSE リアルタイム購読フック
-│   └── types/
-│       └── index.ts                 # TypeScript 型定義
+│   │   │   └── page.tsx             # ダッシュボード (ステータス変更)
+│   │   └── settings/
+│   │       └── page.tsx             # 設定 (プロフィール編集・プリセット管理・ログアウト)
+│   ├── [username]/
+│   │   └── page.tsx                 # 公開ステータスページ (SSE + 動的OGP)
+│   └── auth/
+│       └── callback/
+│           └── route.ts             # OAuth コールバック処理
+├── components/
+│   ├── ui/                          # shadcn UI コンポーネント (button, card, input, label)
+│   ├── dashboard/
+│   │   └── StatusCard.tsx           # ダッシュボード用ステータスカード
+│   ├── settings/
+│   │   ├── ProfileForm.tsx          # プロフィール編集フォーム
+│   │   ├── PresetList.tsx           # プリセット一覧・管理
+│   │   └── LogoutButton.tsx         # ログアウトボタン
+│   └── status/
+│       └── PublicStatusCard.tsx      # 公開ページ用ステータスカード (SSE対応)
+├── lib/
+│   ├── api/
+│   │   ├── index.ts                 # API共通設定 (ベースURL、認証ヘッダー、unwrap)
+│   │   ├── auth.ts                  # 認証系API (setup, me, update)
+│   │   ├── status.ts                # ステータスAPI (public, me, update)
+│   │   └── preset.ts                # プリセットAPI (CRUD)
+│   ├── supabase/
+│   │   ├── client.ts                # Supabase ブラウザクライアント
+│   │   └── server.ts                # Supabase サーバーサイドクライアント
+│   ├── schemas/
+│   │   ├── user.ts                  # ユーザー関連のZodスキーマ
+│   │   ├── status.ts                # ステータス関連のZodスキーマ
+│   │   └── preset.ts                # プリセット関連のZodスキーマ
+│   └── utils.ts                     # ユーティリティ (cn関数)
+├── types/
+│   ├── user/index.ts                # ユーザー型定義
+│   ├── roomStatus/index.ts          # ステータス型定義
+│   └── preset/index.ts              # プリセット型定義
+├── proxy.ts                         # Supabase SSR ミドルウェア (認証ガード)
 ├── public/
-├── package.json
+│   └── icon.png                     # アプリアイコン
 ├── next.config.ts
-├── tailwind.config.ts
+├── package.json
+├── Dockerfile
 └── tsconfig.json
 ```
 
@@ -238,15 +249,14 @@ presets ||--o{ room_statuses : "referenced by"
 #### room_statuses
 
 1ユーザーにつき1行。ステータス更新時は UPDATE で上書きする。
-将来、履歴機能が必要になった場合は `status_histories` テーブルを別途追加する。
 
-| カラム         | 型           | 制約                           | 説明               |
-| -------------- | ------------ | ------------------------------ | ------------------ |
-| id             | UUID         | PK, DEFAULT uuid_generate_v4() | ステータスID       |
+| カラム         | 型           | 制約                             | 説明                    |
+| -------------- | ------------ | -------------------------------- | ----------------------- |
+| id             | UUID         | PK, DEFAULT uuid_generate_v4()   | ステータスID            |
 | user_id        | UUID         | FK → users(id), UNIQUE, NOT NULL | ユーザーID (1ユーザー1行) |
-| preset_id      | UUID         | FK → presets(id), NULL可       | プリセットID       |
-| custom_message | VARCHAR(200) | DEFAULT ''                     | カスタムメッセージ |
-| updated_at     | TIMESTAMPTZ  | DEFAULT NOW()                  | 更新日時           |
+| preset_id      | UUID         | FK → presets(id), NULL可         | プリセットID            |
+| custom_message | VARCHAR(200) | DEFAULT ''                       | カスタムメッセージ      |
+| updated_at     | TIMESTAMPTZ  | DEFAULT NOW()                    | 更新日時                |
 
 #### インデックス
 
@@ -274,7 +284,6 @@ presets ||--o{ room_statuses : "referenced by"
 ### 6.1 ベースURL
 
 - 開発: `http://localhost:8080`
-- 本番: `https://knockit-api.onrender.com` (例)
 
 ### 6.2 共通レスポンスフォーマット
 
@@ -301,36 +310,47 @@ presets ||--o{ room_statuses : "referenced by"
 
 #### 認証不要
 
-| メソッド | パス                             | 説明                         |
-| -------- | -------------------------------- | ---------------------------- |
-| GET      | /api/v1/health                   | ヘルスチェック               |
-| GET      | /api/v1/status/{username}        | ユーザーの公開ステータス取得 |
-| GET      | /api/v1/status/{username}/stream | SSE リアルタイム配信         |
+| メソッド | パス                         | 説明                         |
+| -------- | ---------------------------- | ---------------------------- |
+| GET      | /status/{username}           | ユーザーの公開ステータス取得 |
+| GET      | /status/{username}/stream    | SSE リアルタイム配信         |
 
 #### 認証必須 (Authorization: Bearer {JWT})
 
-| メソッド | パス                           | 説明                   |
-| -------- | ------------------------------ | ---------------------- |
-| POST     | /api/v1/users/me/setup         | 初回ユーザー名設定     |
-| GET      | /api/v1/users/me               | 自分のプロフィール取得 |
-| PUT      | /api/v1/users/me               | プロフィール更新       |
-| GET      | /api/v1/users/me/status        | 自分のステータス取得   |
-| PUT      | /api/v1/users/me/status        | ステータス更新         |
-| GET      | /api/v1/users/me/presets       | 自分のプリセット一覧   |
-| POST     | /api/v1/users/me/presets       | プリセット作成         |
-| PUT      | /api/v1/users/me/presets/{id}  | プリセット更新         |
-| DELETE   | /api/v1/users/me/presets/{id}  | プリセット削除         |
+| メソッド | パス              | 説明                   |
+| -------- | ----------------- | ---------------------- |
+| POST     | /auth/setup       | 初回ユーザー名設定     |
+| GET      | /auth/me          | 自分のプロフィール取得 |
+| PATCH    | /auth/me          | プロフィール更新       |
+| GET      | /status/me        | 自分のステータス取得   |
+| PUT      | /status/me        | ステータス更新         |
+| GET      | /presets          | 自分のプリセット一覧   |
+| POST     | /presets          | プリセット作成         |
+| PATCH    | /presets/{id}     | プリセット更新         |
+| DELETE   | /presets/{id}     | プリセット削除         |
 
 ---
 
 ## 7. 画面構成
 
-| 画面           | パス        | 認証 | 説明                             |
-| -------------- | ----------- | ---- | -------------------------------- |
-| ランディング   | /           | 不要 | サービス説明 + ログインボタン    |
-| ログイン       | /login      | 不要 | Google/GitHub OAuth              |
-| 管理画面       | /dashboard  | 必須 | ステータス変更・プロフィール設定 |
-| 公開ステータス | /{username} | 不要 | リアルタイムステータス表示 (SSE) |
+| 画面             | パス          | 認証 | 説明                                 |
+| ---------------- | ------------- | ---- | ------------------------------------ |
+| トップページ     | /             | 不要 | アイコン + サービス説明 + はじめるボタン |
+| ログイン         | /login        | 不要 | Google OAuth                         |
+| 初回セットアップ | /setup        | 必須 | ユーザー名・表示名の設定             |
+| ダッシュボード   | /dashboard    | 必須 | ステータス変更                       |
+| 設定             | /settings     | 必須 | プロフィール編集・プリセット管理・ログアウト |
+| 公開ステータス   | /{username}   | 不要 | リアルタイムステータス表示 (SSE)     |
+
+### ルートグループ
+
+- `(auth)` — ログイン・セットアップ。未認証ユーザー向け
+- `(protected)` — ダッシュボード・設定。`proxy.ts` のミドルウェアで認証ガード
+
+### OGP メタデータ
+
+- **ルートレイアウト**: サイト全体のデフォルトOGP (`title.template: "%s | Knockit"`)
+- **公開ステータスページ**: `generateMetadata` でユーザーごとの動的OGP生成
 
 ---
 
@@ -341,9 +361,9 @@ presets ||--o{ room_statuses : "referenced by"
 専用端末（タブレットなど）で公開ページを常時表示し、ステータス変更を即座に反映する。
 
 ```
-[管理画面]                  [Go API]                [公開ページ (タブレット)]
+[ダッシュボード]             [Go API]                [公開ページ (タブレット)]
     │                         │                         │
-    │ PUT /status             │                         │
+    │ PUT /status/me          │                         │
     │────────────────────────▶│                         │
     │                         │ DB 更新                 │
     │                         │                         │
@@ -362,18 +382,14 @@ presets ||--o{ room_statuses : "referenced by"
 
 ### フロント側: EventSource API
 
-```
-const eventSource = new EventSource(`/api/v1/status/${username}/stream`)
-eventSource.addEventListener('status', (e) => { setStatus(JSON.parse(e.data)) })
-```
+`PublicStatusCard` コンポーネント内で SSE を購読し、リアルタイムでステータスを更新する。
 
 ---
 
 ## 9. デプロイ構成
 
-| サービス       | プラットフォーム | プラン       | 備考                          |
-| -------------- | ---------------- | ------------ | ----------------------------- |
-| フロントエンド | Vercel           | Hobby (無料) | Next.js 自動最適化            |
-| バックエンド   | Render           | Free         | Docker デプロイ、スリープあり |
-| データベース   | Supabase         | Free         | PostgreSQL、500MB             |
-| 認証           | Supabase Auth    | Free         | OAuth (Google/GitHub)         |
+| サービス       | プラットフォーム | 備考                                    |
+| -------------- | ---------------- | --------------------------------------- |
+| バックエンド   | Fly.io           | Docker デプロイ、リージョン nrt (東京)  |
+| データベース   | Supabase         | PostgreSQL                              |
+| 認証           | Supabase Auth    | Google OAuth                            |
