@@ -28,5 +28,5 @@ jobs:
       - name: eslint check # 静的解析
         run: npm run lint
 
-      - name: build check # ビルドチェック
-        run: npm run build
+      - name: type check # 型チェック
+        run: npm run type-check
