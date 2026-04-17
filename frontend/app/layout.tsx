@@ -23,13 +23,13 @@ export const metadata: Metadata = {
     : undefined,
   title: {
     default: "knockit",
-    template: "%s | Knockit",
+    template: "%s | knockit",
   },
   description: "家族にあなたの今を、そっと伝える。",
   openGraph: {
     title: {
       default: "knockit",
-      template: "%s | Knockit",
+      template: "%s | knockit",
     },
     description: "家族にあなたの今を、そっと伝える。",
     siteName: "knockit",
