@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	"github.com/akito-0520/knockit/internal/model"
 )
@@ -39,7 +40,12 @@ func (r *PresetRepository) FindByUserID(ctx context.Context, userId string) ([]m
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows close failed: %v", err)
+		}
+	}()
 
 	var presets []model.Preset
 	for rows.Next() {
