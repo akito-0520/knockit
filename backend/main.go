@@ -40,7 +40,7 @@ func main() {
 	presetRepo := repository.NewPresetRepository(db)
 
 	// サービスの初期化
-	authService := service.NewAuthService(userRepo, presetRepo)
+	authService := service.NewAuthService(userRepo, statusRepo, presetRepo)
 	statusService := service.NewStatusService(statusRepo, userRepo)
 	presetService := service.NewPresetService(presetRepo)
 

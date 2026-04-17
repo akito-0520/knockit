@@ -40,3 +40,13 @@ func (r *StatusRepository) Upsert(ctx context.Context, status *model.RoomStatus)
 	}
 	return nil
 }
+
+func (r *StatusRepository) CreateInitial(ctx context.Context, userID string) error {
+	query := `INSERT INTO room_statuses (user_id) VALUES &1`
+
+	_, err := r.db.ExecContext(ctx, query, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

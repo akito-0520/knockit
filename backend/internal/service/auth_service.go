@@ -10,12 +10,14 @@ import (
 
 type AuthService struct {
 	userRepository   *repository.UserRepository
+	statusRepository *repository.StatusRepository
 	presetRepository *repository.PresetRepository
 }
 
-func NewAuthService(userRepo *repository.UserRepository, presetRepo *repository.PresetRepository) *AuthService {
+func NewAuthService(userRepo *repository.UserRepository, statusRepo *repository.StatusRepository, presetRepo *repository.PresetRepository) *AuthService {
 	return &AuthService{
 		userRepository:   userRepo,
+		statusRepository: statusRepo,
 		presetRepository: presetRepo,
 	}
 }
@@ -49,6 +51,11 @@ func (s *AuthService) SetupUser(ctx context.Context, supabaseUserID string, req 
 
 	// デフォルトプリセットの作成
 	err = s.presetRepository.CreateDefaultPresets(ctx, supabaseUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.statusRepository.CreateInitial(ctx, supabaseUserID)
 	if err != nil {
 		return nil, err
 	}
