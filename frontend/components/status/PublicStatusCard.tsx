@@ -29,7 +29,7 @@ export default function PublicStatusCard({ username, initialStatus }: Props) {
     <Card>
       <CardContent className="pt-6 md:pt-10 space-y-4 md:space-y-6">
         {!status.preset.label && !status.customMessage && (
-          <p className="text-center text-lg md:text-2xl lg:text-6xl text-muted-foreground">
+          <p className="text-center text-lg md:text-2xl lg:text-6xl text-muted-foreground whitespace-nowrap">
             まだ何も入力していません...
           </p>
         )}
