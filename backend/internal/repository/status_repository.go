@@ -42,7 +42,7 @@ func (r *StatusRepository) Upsert(ctx context.Context, status *model.RoomStatus)
 }
 
 func (r *StatusRepository) CreateInitial(ctx context.Context, userID string) error {
-	query := `INSERT INTO room_statuses (user_id) VALUES (&1)`
+	query := `INSERT INTO room_statuses (user_id) VALUES ($1)`
 
 	_, err := r.db.ExecContext(ctx, query, userID)
 	if err != nil {
