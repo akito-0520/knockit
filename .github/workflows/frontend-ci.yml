@@ -1,0 +1,32 @@
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+jobs:
+  frontend-check: # ジョブ名
+    runs-on: ubuntu-latest # 実行環境
+
+    defaults:
+      run: # ワークフローのrunステップで使用される作業ディレクトリの設定
+        working-directory: ./frontend
+
+    steps: # ステップの定義
+      - name: checkout repository # レポジトリのソースコードをチェックアウト
+        uses: actions/checkout@v6
+
+      - name: setup node # nodeのセットアップ
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: install # `package-lock.json` と完全一致するバージョンのインストール
+        run: npm ci
+
+      - name: eslint check # 静的解析
+        run: npm run lint
+
+      - name: build check # ビルドチェック
+        run: npm run build
