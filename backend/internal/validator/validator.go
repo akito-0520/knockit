@@ -46,12 +46,14 @@ func ValidateUserUpdate(req model.UserUpdateRequest) []model.ValidationError {
 func ValidateStatusUpdate(req model.StatusUpdateRequest) []model.ValidationError {
 	var errs []model.ValidationError
 
-	if req.PresetID == "" && req.CustomMessage == "" {
+	presetEmpty := req.PresetID == nil || *req.PresetID == ""
+
+	if presetEmpty && req.CustomMessage == "" {
 		errs = append(errs, model.ValidationError{Field: "request", Message: "either preset_id or custom_message is required"})
 		return errs
 	}
 
-	if req.PresetID != "" && !UUIDRegex.MatchString(req.PresetID) {
+	if !presetEmpty && !UUIDRegex.MatchString(*req.PresetID) {
 		errs = append(errs, model.ValidationError{Field: "preset_id", Message: "preset_id must be a valid UUID format"})
 	}
 

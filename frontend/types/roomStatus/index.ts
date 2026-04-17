@@ -13,7 +13,7 @@ type StatusResponse = {
 };
 
 type UpdateStatusRequest = {
-  presetId?: string;
+  presetId: string | null;
   customMessage?: string;
 };
 

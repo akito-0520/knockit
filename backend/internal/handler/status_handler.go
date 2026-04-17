@@ -43,8 +43,8 @@ func (h *StatusHandler) GetPublicStatus(w http.ResponseWriter, r *http.Request) 
 
 	// プリセットIDからプリセット情報を取得
 	var preset *model.Preset
-	if status.PresetID != "" {
-		preset, err = h.presetService.GetPresetByID(r.Context(), status.PresetID)
+	if status.PresetID != nil && *status.PresetID != "" {
+		preset, err = h.presetService.GetPresetByID(r.Context(), *status.PresetID)
 		if err != nil {
 			switch {
 			case errors.Is(err, model.ErrNotFound):
@@ -104,8 +104,8 @@ func (h *StatusHandler) GetMyStatus(w http.ResponseWriter, r *http.Request) {
 
 	// プリセットIDからプリセット情報を取得
 	var preset *model.Preset
-	if status.PresetID != "" {
-		preset, err = h.presetService.GetPresetByID(r.Context(), status.PresetID)
+	if status.PresetID != nil && *status.PresetID != "" {
+		preset, err = h.presetService.GetPresetByID(r.Context(), *status.PresetID)
 		if err != nil {
 			switch {
 			case errors.Is(err, model.ErrNotFound):
@@ -174,8 +174,8 @@ func (h *StatusHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 
 	// プリセットIDからプリセット情報を取得
 	var preset *model.Preset
-	if status.PresetID != "" {
-		preset, err = h.presetService.GetPresetByID(r.Context(), status.PresetID)
+	if status.PresetID != nil && *status.PresetID != "" {
+		preset, err = h.presetService.GetPresetByID(r.Context(), *status.PresetID)
 		if err != nil {
 			switch {
 			case errors.Is(err, model.ErrNotFound):

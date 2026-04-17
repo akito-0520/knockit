@@ -30,7 +30,7 @@ export default function StatusCard({ token, presets, initialStatus }: Props) {
   } = useForm<StatusFormValue>({
     resolver: zodResolver(statusSchema),
     defaultValues: {
-      presetId: initialStatus?.preset?.id ?? "",
+      presetId: initialStatus?.preset?.id ?? null,
       customMessage: initialStatus?.customMessage ?? "",
     },
   });
@@ -41,7 +41,7 @@ export default function StatusCard({ token, presets, initialStatus }: Props) {
   const onSubmit = async (data: StatusFormValue) => {
     try {
       const updated = await updateStatus(token, {
-        presetId: data.presetId ?? "",
+        presetId: data.presetId ?? null,
         customMessage: data.customMessage ?? "",
       });
       setStatus(updated);
@@ -84,7 +84,10 @@ export default function StatusCard({ token, presets, initialStatus }: Props) {
                     key={preset.id}
                     type="button"
                     onClick={() => {
-                      setValue("presetId", preset.id);
+                      setValue(
+                        "presetId",
+                        selectedPresetId === preset.id ? null : preset.id,
+                      );
                     }}
                     className={`px-4 py-2 rounded-full text-white font-medium transition ${
                       selectedPresetId === preset.id

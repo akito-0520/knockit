@@ -2,7 +2,7 @@ import z from "zod";
 
 export const statusSchema = z
   .object({
-    presetId: z.string().optional(),
+    presetId: z.string().nullable().optional(),
     customMessage: z
       .string()
       .max(200, "200文字以内で入力してください")

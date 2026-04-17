@@ -46,8 +46,8 @@ func (h *StatusHandler) StreamStatus(w http.ResponseWriter, r *http.Request) {
 		case status := <-ch: // ステータス更新
 			// プリセットIDからプリセット情報を取得
 			var preset *model.Preset
-			if status.PresetID != "" {
-				preset, err = h.presetService.GetPresetByID(r.Context(), status.PresetID)
+			if status != nil && *status.PresetID != "" {
+				preset, err = h.presetService.GetPresetByID(r.Context(), *status.PresetID)
 				if err != nil {
 					continue
 				}
