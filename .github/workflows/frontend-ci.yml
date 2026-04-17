@@ -6,7 +6,7 @@ on:
       - ".github/workflows/frontend-ci.yml"
 
 jobs:
-  frontend-check: # ジョブ名
+  frontend-ci: # ジョブ名
     runs-on: ubuntu-latest # 実行環境
 
     defaults:
