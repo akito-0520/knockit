@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/akito-0520/knockit/internal/model"
@@ -63,7 +64,11 @@ func (h *StatusHandler) StreamStatus(w http.ResponseWriter, r *http.Request) {
 			}
 
 			data, _ := json.Marshal(res)
-			fmt.Fprintf(w, "data: %s\n\n", data)
+
+			if _, err = fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+				log.Printf("sse write failed: %v", err)
+				return
+			}
 			w.(http.Flusher).Flush()
 		}
 	}
