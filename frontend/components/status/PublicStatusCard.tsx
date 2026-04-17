@@ -29,20 +29,20 @@ export default function PublicStatusCard({ username, initialStatus }: Props) {
     <Card>
       <CardContent className="pt-6 md:pt-10 space-y-4 md:space-y-6">
         {!status.preset && !status.customMessage && (
-          <p className="text-center text-lg md:text-2xl lg:text-3xl text-muted-foreground">
+          <p className="text-center text-lg md:text-2xl lg:text-6xl text-muted-foreground">
             まだ何も入力していません...
           </p>
         )}
         {status.preset?.label && (
           <div
-            className="px-6 py-4 md:px-10 md:py-10 lg:py-14 rounded-lg text-white text-center text-xl md:text-4xl lg:text-6xl font-bold"
+            className="px-6 py-4 md:px-10 md:py-10 lg:px-20 lg:py-28 rounded-lg text-white text-center text-xl md:text-4xl lg:text-9xl font-bold"
             style={{ backgroundColor: status.preset.color }}
           >
             {status.preset.label}
           </div>
         )}
         {status.customMessage && (
-          <p className="text-center text-lg md:text-2xl lg:text-3xl">
+          <p className="text-center text-lg md:text-2xl lg:text-6xl">
             {status.customMessage}
           </p>
         )}
