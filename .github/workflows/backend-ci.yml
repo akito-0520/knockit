@@ -1,0 +1,47 @@
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  backend-ci: # ジョブ名
+    runs-on: ubuntu-latest # 実行環境
+
+    defaults:
+      run: # ワークフローのrunステップで使用される作業ディレクトリの設定
+        working-directory: ./backend
+
+    steps: # ステップの定義
+      - name: checkout repository # レポジトリのソースコードをチェック
+        uses: actions/checkout@v6
+
+      - name: setup golang # goのセットアップ
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: backend/go.mod
+
+      - name: download # モジュールのインストール
+        run: go mod download
+
+      - name: build check
+        run: go build ./...
+
+      - name: format check
+        run: test -z "$(gofmt -l .)"
+
+  golangci: # ジョブ名(別のジョブとして実行)
+    name: lint check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: backend/go.mod
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          working-directory: ./backend
