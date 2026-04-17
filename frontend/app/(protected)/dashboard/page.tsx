@@ -7,8 +7,14 @@ import StatusCard from "@/components/dashboard/StatusCard";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
+import InitialTutorial from "@/components/tutorial/InitialTutorial";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { tutorial } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -44,6 +50,8 @@ export default async function DashboardPage() {
           </Button>
         </Link>
       </div>
+
+      {tutorial === "true" && <InitialTutorial />}
 
       <StatusCard token={token} presets={presets} initialStatus={myStatus} />
 

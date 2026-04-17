@@ -41,7 +41,7 @@ export default function SetupPage() {
         username: data.username,
         displayName: data.displayName,
       });
-      router.push("/dashboard");
+      router.push("/dashboard?tutorial=true");
     } catch (e) {
       setError(e instanceof Error ? e.message : "設定に失敗しました");
     }

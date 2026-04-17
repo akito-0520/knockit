@@ -7,6 +7,7 @@ import PresetList from "@/components/settings/PresetList";
 import LogoutButton from "@/components/settings/LogoutButton";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import TutorialButton from "@/components/tutorial/TutorialButton";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -47,6 +48,11 @@ export default async function SettingsPage() {
       <section className="space-y-3 mb-6 md:flex md:flex-col md:min-h-0 md:flex-1">
         <h2 className="text-xl font-semibold shrink-0">プリセット</h2>
         <PresetList token={token} initialPresets={presets} />
+      </section>
+
+      <section className="space-y-3 pt-4 border-t shrink-0">
+        <h2 className="text-xl font-semibold">その他</h2>
+        <TutorialButton />
       </section>
 
       <section className="space-y-3 pt-4 border-t shrink-0">
