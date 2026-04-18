@@ -42,16 +42,19 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	statusRepo := repository.NewStatusRepository(db)
 	presetRepo := repository.NewPresetRepository(db)
+	healthRepo := repository.NewHealthRepository(db)
 
 	// サービスの初期化
 	authService := service.NewAuthService(userRepo, statusRepo, presetRepo)
 	statusService := service.NewStatusService(statusRepo, userRepo)
 	presetService := service.NewPresetService(presetRepo)
+	healthService := service.NewHealthService(healthRepo)
 
 	// ハンドラーの初期化
 	authHandler := handler.NewAuthHandler(authService)
 	statusHandler := handler.NewStatusHandler(statusService, presetService)
 	presetHandler := handler.NewPresetHandler(presetService)
+	healthHandler := handler.NewHealthHandler(healthService)
 
 	// ミドルウェアの初期化
 	authMiddleware, err := middleware.NewAuthMiddleware(cfg.SupabaseURL)
@@ -66,6 +69,8 @@ func main() {
 	// 認証不要
 	mux.HandleFunc("GET /status/{username}", statusHandler.GetPublicStatus)
 	mux.HandleFunc("GET /status/{username}/stream", statusHandler.StreamStatus)
+	mux.HandleFunc("GET /healthz", healthHandler.Live)
+	mux.HandleFunc("GET readyz", healthHandler.Ready)
 
 	// 認証必要
 	auth := authMiddleware.Authenticate
