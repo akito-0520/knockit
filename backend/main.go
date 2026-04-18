@@ -70,7 +70,7 @@ func main() {
 	mux.HandleFunc("GET /status/{username}", statusHandler.GetPublicStatus)
 	mux.HandleFunc("GET /status/{username}/stream", statusHandler.StreamStatus)
 	mux.HandleFunc("GET /healthz", healthHandler.Live)
-	mux.HandleFunc("GET readyz", healthHandler.Ready)
+	mux.HandleFunc("GET /readyz", healthHandler.Ready)
 
 	// 認証必要
 	auth := authMiddleware.Authenticate
