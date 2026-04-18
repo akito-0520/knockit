@@ -435,3 +435,90 @@ func TestValidateCreatePreset(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateUpdatePreset(t *testing.T) {
+	longLabel := strings.Repeat("a", 21)
+
+	tests := []struct {
+		name         string
+		req          model.CreatePresetRequest
+		wantErrCount int
+		wantFields   []string
+	}{
+		{
+			name: "正常系",
+			req: model.CreatePresetRequest{
+				Label:        "aaaa",
+				Color:        "#FFFFFF",
+				DisplayOrder: 0,
+			},
+			wantErrCount: 0,
+			wantFields:   nil,
+		},
+		{
+			name: "異常系: labelが長すぎる",
+			req: model.CreatePresetRequest{
+				Label:        longLabel,
+				Color:        "#FFFFFF",
+				DisplayOrder: 0,
+			},
+			wantErrCount: 1,
+			wantFields:   []string{"label"},
+		},
+		{
+			name: "異常系: colorの不正フォーマット",
+			req: model.CreatePresetRequest{
+				Label:        "aaaaaa",
+				Color:        "FFFFFF",
+				DisplayOrder: 0,
+			},
+			wantErrCount: 1,
+			wantFields:   []string{"color"},
+		},
+		{
+			name: "異常系: display orderが負の数",
+			req: model.CreatePresetRequest{
+				Label:        "aaaaaa",
+				Color:        "#FFFFFF",
+				DisplayOrder: -1,
+			},
+			wantErrCount: 1,
+			wantFields:   []string{"display_order"},
+		},
+		{
+			name: "異常系: 全てが不正",
+			req: model.CreatePresetRequest{
+				Label:        longLabel,
+				Color:        "FFFFFF",
+				DisplayOrder: -1,
+			},
+			wantErrCount: 3,
+			wantFields:   []string{"label", "color", "display_order"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := validator.ValidateCreatePreset(tt.req)
+
+			if len(errs) != tt.wantErrCount {
+				t.Errorf("got %d, want %d, errs=%+v", len(errs), tt.wantErrCount, errs)
+			}
+
+			// Field の検証
+			gotFields := make([]string, len(errs))
+			for i, e := range errs {
+				gotFields[i] = e.Field
+			}
+
+			sort.Strings(gotFields)
+
+			wantFields := append([]string{}, tt.wantFields...) // 元を壊さないように
+			sort.Strings(wantFields)
+
+			if !reflect.DeepEqual(gotFields, wantFields) {
+				t.Errorf("got fields %v, want %v", gotFields, wantFields)
+			}
+		})
+	}
+}
