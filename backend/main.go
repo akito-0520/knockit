@@ -52,7 +52,7 @@ func main() {
 
 	// ハンドラーの初期化
 	authHandler := handler.NewAuthHandler(authService)
-	statusHandler := handler.NewStatusHandler(statusService, presetService)
+	statusHandler := handler.NewStatusHandler(authService, statusService, presetService)
 	presetHandler := handler.NewPresetHandler(presetService)
 	healthHandler := handler.NewHealthHandler(healthService)
 
