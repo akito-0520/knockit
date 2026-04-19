@@ -49,10 +49,6 @@ func (s *StatusService) GetStatusByUsername(ctx context.Context, username string
 	return status, user, nil
 }
 
-func (s *StatusService) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
-	return s.userRepository.FindByID(ctx, userID)
-}
-
 func (s *StatusService) GetMyStatus(ctx context.Context, userID string) (*model.RoomStatus, error) {
 	// ユーザーIDからステータス情報を取得
 	status, err := s.statusRepository.FindByUserID(ctx, userID)

@@ -12,12 +12,14 @@ import (
 )
 
 type StatusHandler struct {
+	authService   *service.AuthService
 	statusService *service.StatusService
 	presetService *service.PresetService
 }
 
-func NewStatusHandler(statusService *service.StatusService, presetService *service.PresetService) *StatusHandler {
+func NewStatusHandler(authService *service.AuthService, statusService *service.StatusService, presetService *service.PresetService) *StatusHandler {
 	return &StatusHandler{
+		authService:   authService,
 		statusService: statusService,
 		presetService: presetService,
 	}
@@ -91,7 +93,7 @@ func (h *StatusHandler) GetMyStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ユーザー情報の取得
-	user, err := h.statusService.GetUserByID(r.Context(), userID)
+	user, err := h.authService.GetCurrentUser(r.Context(), userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, model.ErrNotFound):
@@ -161,7 +163,7 @@ func (h *StatusHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ユーザー情報の取得
-	user, err := h.statusService.GetUserByID(r.Context(), userID)
+	user, err := h.authService.GetCurrentUser(r.Context(), userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, model.ErrNotFound):
