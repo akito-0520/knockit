@@ -52,7 +52,12 @@ export default async function SettingsPage() {
 
       <section className="space-y-3 pt-4 border-t shrink-0">
         <h2 className="text-xl font-semibold">その他</h2>
-        <TutorialButton />
+        <div className="flex flex-wrap gap-2">
+          <TutorialButton />
+          <Link href="/contact">
+            <Button variant="outline">問い合わせ</Button>
+          </Link>
+        </div>
       </section>
 
       <section className="space-y-3 pt-4 border-t shrink-0">
