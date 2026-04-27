@@ -8,6 +8,7 @@ import LogoutButton from "@/components/settings/LogoutButton";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import TutorialButton from "@/components/tutorial/TutorialButton";
+import { APP_VERSION } from "@/lib/version";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -64,6 +65,10 @@ export default async function SettingsPage() {
         <h2 className="text-xl font-semibold">アカウント</h2>
         <LogoutButton />
       </section>
+
+      <p className="text-xs text-muted-foreground text-center pt-6 shrink-0">
+        version {APP_VERSION}
+      </p>
     </main>
   );
 }
