@@ -42,18 +42,21 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	statusRepo := repository.NewStatusRepository(db)
 	presetRepo := repository.NewPresetRepository(db)
+	inquiryRepo := repository.NewInquiryRepository(db)
 	healthRepo := repository.NewHealthRepository(db)
 
 	// サービスの初期化
 	authService := service.NewAuthService(userRepo, statusRepo, presetRepo)
 	statusService := service.NewStatusService(statusRepo, userRepo)
 	presetService := service.NewPresetService(presetRepo)
+	inquiryService := service.NewInquiryRepository(inquiryRepo)
 	healthService := service.NewHealthService(healthRepo)
 
 	// ハンドラーの初期化
 	authHandler := handler.NewAuthHandler(authService)
 	statusHandler := handler.NewStatusHandler(statusService, presetService)
 	presetHandler := handler.NewPresetHandler(presetService)
+	inquiryHandler := handler.NewInquiryHandler(inquiryService)
 	healthHandler := handler.NewHealthHandler(healthService)
 
 	// ミドルウェアの初期化
@@ -83,6 +86,7 @@ func main() {
 	mux.Handle("POST /presets", auth(http.HandlerFunc(presetHandler.CreatePreset)))
 	mux.Handle("PATCH /presets/{id}", auth(http.HandlerFunc(presetHandler.UpdatePreset)))
 	mux.Handle("DELETE /presets/{id}", auth(http.HandlerFunc(presetHandler.DeletePreset)))
+	mux.Handle("POST /inquiries", auth(http.HandlerFunc(inquiryHandler.CreateInquiry)))
 
 	// サーバーの起動
 	log.Printf("Server starting on port %d", cfg.Port)

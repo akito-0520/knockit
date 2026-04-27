@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"net/mail"
 	"regexp"
 	"unicode/utf8"
 
@@ -94,6 +95,38 @@ func validatePresetFields(label, color string, displayOrder int) []model.Validat
 	return errs
 }
 
+func ValidateInquiryFields(req *model.CreateInquiryRequest) []model.ValidationError {
+	var errs []model.ValidationError
+
+	if !req.Category.Valid() {
+		errs = append(errs, model.ValidationError{Field: "category", Message: "invalid category"})
+	}
+
+	bodyLen := utf8.RuneCountInString(req.Body)
+	if bodyLen < 5 || bodyLen > 5000 {
+		errs = append(errs, model.ValidationError{Field: "body", Message: "body must be between 5 and 5000 characters"})
+	}
+
+	if req.ReplyRequested {
+		switch {
+		case req.ReplyTo == nil || *req.ReplyTo == "":
+			errs = append(errs, model.ValidationError{Field: "reply_to", Message: "reply to is required when reply requested"})
+		case utf8.RuneCountInString(*req.ReplyTo) > 255:
+			errs = append(errs, model.ValidationError{
+				Field:   "reply_to",
+				Message: "reply_to must be 255 characters or fewer",
+			})
+		case !isValidEmail(*req.ReplyTo):
+			errs = append(errs, model.ValidationError{
+				Field:   "reply_to",
+				Message: "reply_to must be a valid email address",
+			})
+
+		}
+	}
+	return errs
+}
+
 func ValidateCreatePreset(req model.CreatePresetRequest) []model.ValidationError {
 	return validatePresetFields(req.Label, req.Color, req.DisplayOrder)
 }
@@ -108,4 +141,12 @@ func IsValidUUID(s string) bool {
 
 func IsValidColor(s string) bool {
 	return colorRegex.MatchString(s)
+}
+
+func isValidEmail(s string) bool {
+	addr, err := mail.ParseAddress(s)
+	if err != nil {
+		return false
+	}
+	return addr.Address == s
 }

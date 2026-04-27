@@ -30,7 +30,18 @@ CREATE TABLE room_statuses (
     updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE inquiries (
+    id              UUID            PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id         UUID            REFERENCES users(id) ON DELETE SET NULL, 
+    category        VARCHAR(20)     NOT NULL CHECK (category IN ('bug', 'feature', 'other')),
+    body            VARCHAR(5000)   NOT NULL,                                                                                                                                                                    
+    reply_requested BOOLEAN         NOT NULL DEFAULT FALSE,                                                                                                                                                      
+    reply_to        VARCHAR(254),
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);
+
 /* インデックスを作成することで`WHERE`を用いた際などに索引のようにすぐ見つけることができる */
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_presets_user_id ON presets(user_id);
 CREATE INDEX idx_room_statuses_user_id ON room_statuses(user_id);
+CREATE INDEX idx_inquiries_user_id ON inquiries(user_id);   
