@@ -8,7 +8,10 @@ type CreateInquiryRequest = {
 };
 
 type InquiryResponse = {
-  id: string;
+  category: InquiryCategory;
+  body: string;
+  replyRequested: boolean;
+  replyTo: string | null;
   createdAt: string;
 };
 
