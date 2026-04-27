@@ -1,9 +1,6 @@
 # ビルド用
 FROM golang:1.22-alpine AS builder
 
-# ベースイメージを更新
-RUN apk update && apk upgrade
-
 # 作業場所
 WORKDIR /backend
 
@@ -19,14 +16,17 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o server .
 # 実行用
 FROM alpine:3.19
 
-# ベースイメージを更新
-RUN apk update && apk upgrade
+# non-root ユーザーの追加
+RUN adduser -D -u 10001 appuser
 
 # 作業場所
 WORKDIR /backend
 
 # ビルド環境からバイナリーをコピー
 COPY --from=builder /backend/server ./
+
+# ユーザー指定
+USER appuser
 
 # ポートを公開
 EXPOSE 8080
