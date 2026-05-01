@@ -84,7 +84,7 @@ func validatePresetFields(label, color string, displayOrder int) []model.Validat
 		errs = append(errs, model.ValidationError{Field: "label", Message: "label must be between 1 and 20 characters"})
 	}
 
-	if !IsValidColor(color) {
+	if !isValidColor(color) {
 		errs = append(errs, model.ValidationError{Field: "color", Message: "color must be a valid hex color (e.g. #FF0000)"})
 	}
 
@@ -135,11 +135,7 @@ func ValidateUpdatePreset(req model.UpdatePresetRequest) []model.ValidationError
 	return validatePresetFields(req.Label, req.Color, req.DisplayOrder)
 }
 
-func IsValidUUID(s string) bool {
-	return UUIDRegex.MatchString(s)
-}
-
-func IsValidColor(s string) bool {
+func isValidColor(s string) bool {
 	return colorRegex.MatchString(s)
 }
 
