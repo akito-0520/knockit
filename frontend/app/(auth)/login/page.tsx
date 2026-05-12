@@ -84,7 +84,7 @@ export default function LoginPage() {
 
             <p className="text-xs text-center text-muted-foreground">
               ログインすることで
-              <Link href="/" className="underline hover:text-foreground">
+              <Link href="/terms" className="underline hover:text-foreground">
                 利用規約
               </Link>
               に同意したものとみなします
