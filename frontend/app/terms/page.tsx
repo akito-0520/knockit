@@ -16,7 +16,9 @@ export default function TermsPage() {
             ← トップに戻る
           </Link>
           <h1 className="text-3xl font-bold">利用規約</h1>
-          <p className="text-sm text-muted-foreground">最終更新日：2026年5月12日</p>
+          <p className="text-sm text-muted-foreground">
+            最終更新日：2026年5月12日
+          </p>
         </div>
 
         <section className="space-y-3">
@@ -81,14 +83,18 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">第6条（サービスの変更・終了）</h2>
+          <h2 className="text-xl font-semibold">
+            第6条（サービスの変更・終了）
+          </h2>
           <p className="text-sm leading-relaxed">
             運営者は、ユーザーへの事前通知なく、本サービスの内容変更、停止、または終了を行うことがあります。これによってユーザーに生じた損害について、運営者は責任を負いません。
           </p>
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold">第7条（アカウントの停止・削除）</h2>
+          <h2 className="text-xl font-semibold">
+            第7条（アカウントの停止・削除）
+          </h2>
 
           <div className="space-y-2">
             <h3 className="text-base font-medium">7-1. 運営者による停止</h3>
@@ -120,7 +126,9 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">第10条（準拠法・管轄裁判所）</h2>
+          <h2 className="text-xl font-semibold">
+            第10条（準拠法・管轄裁判所）
+          </h2>
           <p className="text-sm leading-relaxed">
             本規約は日本法に準拠します。本規約に関する紛争については、運営者の住所地を管轄する裁判所を第一審の専属的合意管轄裁判所とします。
           </p>
