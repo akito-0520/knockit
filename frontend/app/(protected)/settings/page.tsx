@@ -58,6 +58,9 @@ export default async function SettingsPage() {
           <Link href="/contact">
             <Button variant="outline">問い合わせ</Button>
           </Link>
+          <Link href="/terms">
+            <Button variant="outline">利用規約</Button>
+          </Link>
         </div>
       </section>
 
