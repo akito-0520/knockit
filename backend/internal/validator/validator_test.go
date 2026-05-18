@@ -441,13 +441,13 @@ func TestValidateUpdatePreset(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		req          model.CreatePresetRequest
+		req          model.UpdatePresetRequest
 		wantErrCount int
 		wantFields   []string
 	}{
 		{
 			name: "正常系",
-			req: model.CreatePresetRequest{
+			req: model.UpdatePresetRequest{
 				Label:        "aaaa",
 				Color:        "#FFFFFF",
 				DisplayOrder: 0,
@@ -457,7 +457,7 @@ func TestValidateUpdatePreset(t *testing.T) {
 		},
 		{
 			name: "異常系: labelが長すぎる",
-			req: model.CreatePresetRequest{
+			req: model.UpdatePresetRequest{
 				Label:        longLabel,
 				Color:        "#FFFFFF",
 				DisplayOrder: 0,
@@ -467,7 +467,7 @@ func TestValidateUpdatePreset(t *testing.T) {
 		},
 		{
 			name: "異常系: colorの不正フォーマット",
-			req: model.CreatePresetRequest{
+			req: model.UpdatePresetRequest{
 				Label:        "aaaaaa",
 				Color:        "FFFFFF",
 				DisplayOrder: 0,
@@ -477,7 +477,7 @@ func TestValidateUpdatePreset(t *testing.T) {
 		},
 		{
 			name: "異常系: display orderが負の数",
-			req: model.CreatePresetRequest{
+			req: model.UpdatePresetRequest{
 				Label:        "aaaaaa",
 				Color:        "#FFFFFF",
 				DisplayOrder: -1,
@@ -487,7 +487,7 @@ func TestValidateUpdatePreset(t *testing.T) {
 		},
 		{
 			name: "異常系: 全てが不正",
-			req: model.CreatePresetRequest{
+			req: model.UpdatePresetRequest{
 				Label:        longLabel,
 				Color:        "FFFFFF",
 				DisplayOrder: -1,
@@ -499,7 +499,7 @@ func TestValidateUpdatePreset(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			errs := validator.ValidateCreatePreset(tt.req)
+			errs := validator.ValidateUpdatePreset(tt.req)
 
 			if len(errs) != tt.wantErrCount {
 				t.Errorf("got %d, want %d, errs=%+v", len(errs), tt.wantErrCount, errs)

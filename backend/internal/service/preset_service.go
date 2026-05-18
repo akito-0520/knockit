@@ -5,17 +5,23 @@ import (
 	"time"
 
 	"github.com/akito-0520/knockit/internal/model"
-	"github.com/akito-0520/knockit/internal/repository"
 	"github.com/akito-0520/knockit/internal/validator"
 )
 
-type PresetService struct {
-	presetRepository *repository.PresetRepository
+type PresetRepositoryInterface interface {
+	FindByUserID(ctx context.Context, userID string) ([]model.Preset, error)
+	FindByID(ctx context.Context, id string) (*model.Preset, error)
+	Create(ctx context.Context, preset *model.Preset) error
+	Update(ctx context.Context, preset *model.Preset) error
+	Delete(ctx context.Context, id string) error
 }
 
-func NewPresetService(presetRepo *repository.PresetRepository) *PresetService {
-	return &PresetService{
+type PresetService struct {
+	presetRepository PresetRepositoryInterface
+}
 
+func NewPresetService(presetRepo PresetRepositoryInterface) *PresetService {
+	return &PresetService{
 		presetRepository: presetRepo,
 	}
 }

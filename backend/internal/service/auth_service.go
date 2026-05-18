@@ -4,17 +4,31 @@ import (
 	"context"
 
 	"github.com/akito-0520/knockit/internal/model"
-	"github.com/akito-0520/knockit/internal/repository"
 	"github.com/akito-0520/knockit/internal/validator"
 )
 
-type AuthService struct {
-	userRepository   *repository.UserRepository
-	statusRepository *repository.StatusRepository
-	presetRepository *repository.PresetRepository
+type AuthUserRepositoryInterface interface {
+	FindByID(ctx context.Context, id string) (*model.User, error)
+	ExistsByUsername(ctx context.Context, username string) (bool, error)
+	Create(ctx context.Context, user *model.User) error
+	Update(ctx context.Context, user *model.User) error
 }
 
-func NewAuthService(userRepo *repository.UserRepository, statusRepo *repository.StatusRepository, presetRepo *repository.PresetRepository) *AuthService {
+type AuthStatusRepositoryInterface interface {
+	CreateInitial(ctx context.Context, userID string) error
+}
+
+type AuthPresetRepositoryInterface interface {
+	CreateDefaultPresets(ctx context.Context, userID string) error
+}
+
+type AuthService struct {
+	userRepository   AuthUserRepositoryInterface
+	statusRepository AuthStatusRepositoryInterface
+	presetRepository AuthPresetRepositoryInterface
+}
+
+func NewAuthService(userRepo AuthUserRepositoryInterface, statusRepo AuthStatusRepositoryInterface, presetRepo AuthPresetRepositoryInterface) *AuthService {
 	return &AuthService{
 		userRepository:   userRepo,
 		statusRepository: statusRepo,
