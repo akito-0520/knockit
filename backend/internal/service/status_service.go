@@ -6,19 +6,28 @@ import (
 	"time"
 
 	"github.com/akito-0520/knockit/internal/model"
-	"github.com/akito-0520/knockit/internal/repository"
 	"github.com/akito-0520/knockit/internal/validator"
 )
 
+type UserRepositoryInterface interface {
+	FindByID(ctx context.Context, id string) (*model.User, error)
+	FindByUsername(ctx context.Context, username string) (*model.User, error)
+}
+
+type StatusRepositoryInterface interface {
+	FindByUserID(ctx context.Context, userID string) (*model.RoomStatus, error)
+	Upsert(ctx context.Context, status *model.RoomStatus) error
+}
+
 type StatusService struct {
-	userRepository   *repository.UserRepository
-	statusRepository *repository.StatusRepository
+	userRepository   UserRepositoryInterface
+	statusRepository StatusRepositoryInterface
 
 	clients map[string][]chan *model.RoomStatus // userID → チャネルのリスト作成
 	mu      sync.RWMutex                        // 並行アクセスの保護
 }
 
-func NewStatusService(statusRepo *repository.StatusRepository, userRepo *repository.UserRepository) *StatusService {
+func NewStatusService(statusRepo StatusRepositoryInterface, userRepo UserRepositoryInterface) *StatusService {
 	return &StatusService{
 		statusRepository: statusRepo,
 		userRepository:   userRepo,
@@ -47,10 +56,6 @@ func (s *StatusService) GetStatusByUsername(ctx context.Context, username string
 	}
 
 	return status, user, nil
-}
-
-func (s *StatusService) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
-	return s.userRepository.FindByID(ctx, userID)
 }
 
 func (s *StatusService) GetMyStatus(ctx context.Context, userID string) (*model.RoomStatus, error) {
