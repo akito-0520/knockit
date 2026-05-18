@@ -171,11 +171,11 @@ func TestCreatePreset(t *testing.T) {
 	noopCreate := func(ctx context.Context, preset *model.Preset) error { return nil }
 
 	tests := []struct {
-		name        string
-		req         model.CreatePresetRequest
-		createFunc  func(ctx context.Context, preset *model.Preset) error
-		wantPreset  *model.Preset
-		wantErr     error
+		name       string
+		req        model.CreatePresetRequest
+		createFunc func(ctx context.Context, preset *model.Preset) error
+		wantPreset *model.Preset
+		wantErr    error
 	}{
 		{
 			name:       "正常系",
