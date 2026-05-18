@@ -2,15 +2,17 @@ package service
 
 import (
 	"context"
-
-	"github.com/akito-0520/knockit/internal/repository"
 )
 
-type HealthService struct {
-	healthRepository *repository.HealthRepository
+type HealthRepositoryInterface interface {
+	PingDB(ctx context.Context) error
 }
 
-func NewHealthService(healthRepo *repository.HealthRepository) *HealthService {
+type HealthService struct {
+	healthRepository HealthRepositoryInterface
+}
+
+func NewHealthService(healthRepo HealthRepositoryInterface) *HealthService {
 	return &HealthService{healthRepository: healthRepo}
 }
 
