@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 export default function Header() {
   const pathname = usePathname();
-  if (pathname === "/") return null;
+  if (pathname === "/" || pathname.startsWith("/embed/")) return null;
 
   return (
     <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
