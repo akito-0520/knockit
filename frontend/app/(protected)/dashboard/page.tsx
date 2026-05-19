@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/api/auth";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import StatusCard from "@/components/dashboard/StatusCard";
+import ShareSection from "@/components/dashboard/ShareSection";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
@@ -55,19 +56,7 @@ export default async function DashboardPage({
 
       <StatusCard token={token} presets={presets} initialStatus={myStatus} />
 
-      <div className="mt-8 p-4 bg-muted rounded-lg">
-        <p className="text-sm text-muted-foreground">
-          共有用URL：
-          <Link
-            href={`/${currentUser.username}`}
-            target="_blank"
-            rel="noopener"
-            className="ml-2 underline text-primary"
-          >
-            /{currentUser.username}
-          </Link>
-        </p>
-      </div>
+      <ShareSection username={currentUser.username} />
     </main>
   );
 }
