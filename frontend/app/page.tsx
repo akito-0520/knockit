@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import ProductOverview from "@/components/lp/ProductOverview";
 import { APP_VERSION } from "@/lib/version";
 
 export default function Home() {
@@ -27,10 +28,13 @@ export default function Home() {
             <Button size="lg">はじめる</Button>
           </Link>
         </div>
-        <p className="text-xs text-muted-foreground pt-6">
-          version {APP_VERSION}
-        </p>
       </div>
+
+      <ProductOverview />
+
+      <p className="text-xs text-muted-foreground pt-12">
+        version {APP_VERSION}
+      </p>
     </main>
   );
 }
