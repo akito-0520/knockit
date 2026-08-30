@@ -127,14 +127,12 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
               <li key={key.id} className="flex items-center gap-3 px-4 py-2.5">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{key.label}</p>
-                  <p className="text-xs text-muted-foreground font-mono">
-                    {key.keyPrefix}…{" "}
-                    <span className="font-sans">
-                      ·{" "}
-                      {key.lastUsedAt
-                        ? `最終使用 ${formatRelativeTime(key.lastUsedAt)}`
-                        : "未使用"}
-                    </span>
+                  <p className="text-xs text-muted-foreground truncate">
+                    <span className="font-mono">{key.keyPrefix}…</span>
+                    <span className="mx-1.5">·</span>
+                    {key.lastUsedAt
+                      ? `最終使用 ${formatRelativeTime(key.lastUsedAt)}`
+                      : "未使用"}
                   </p>
                 </div>
                 <Button
