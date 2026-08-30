@@ -1,68 +1,20 @@
 # 外部連携（APIキー）
 
-APIキーを使うと、Supabase のログインセッション無しで外部システムから
-ステータスを更新できる。カレンダー連携・IoT ボタン・他サービスの Webhook
-などから `PUT /status/me` を叩くための仕組み。
+ユーザー向けの手順はアプリ内の `/integrations` ページに掲載している
+（`frontend/app/integrations/page.tsx`）。ここでは開発者向けのメモのみ残す。
 
-## APIキーの発行
+## 概要
 
-1. 設定画面（`/settings`）→「APIキー」→「APIキーを発行」
-2. ラベル（用途がわかる名前。例: `iOS ショートカット`）を入力して「発行」
-3. 表示された生キー（`knk_` で始まる文字列）を控える
-   - **生キーはこの画面でしか表示されない**。閉じると二度と表示できない
-   - 紛失したら削除して発行し直す
-4. 1 ユーザーにつき最大 10 個。ラベルはユーザー内で一意
+- `POST/GET/DELETE /auth/api-keys`（JWT 必須）でキーを発行・一覧・失効
+- `GET`/`PUT /status/me` は JWT または `X-API-Key` ヘッダのどちらでも通る
+- `PUT /status/me` の body は `preset_label` / `preset_id` / `custom_message`
+  （`preset_label` はそのユーザーのプリセットをラベルで解決。`preset_id` があれば優先）
+- 生キーは発行レスポンスのみ。SHA-256 ハッシュを保存。1 ユーザー 10 個上限、
+  ラベルはユーザー内 UNIQUE
+- レート制限なし・キー編集なし（rename は失効＋再作成）
 
-## 使い方
+## セットアップ
 
-`PUT /status/me` に `X-API-Key` ヘッダを付けて JSON を送る。
-
-```bash
-curl -X PUT https://<api-host>/status/me \
-  -H "X-API-Key: knk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
-  -H "Content-Type: application/json" \
-  -d '{"preset_label":"会議中"}'
-```
-
-リクエストボディは以下のいずれか（既存の JWT 経由と同じ形式）:
-
-| フィールド       | 説明                                                                        |
-| ---------------- | --------------------------------------------------------------------------- |
-| `preset_label`   | プリセットのラベル名で指定（例: `"会議中"`）。UUID を知らなくてよい         |
-| `preset_id`      | プリセットの UUID で指定。`preset_label` と両方指定された場合はこちらが優先 |
-| `custom_message` | 任意の文言（プリセットの色チップ無し、テキストのみ）                        |
-
-成功すると対象ユーザーの公開ページ（`/{username}`）が SSE で即座に更新される。
-
-## iOS / macOS ショートカットでのカレンダー連携
-
-iCloud カレンダーには Webhook が無いが、ショートカット App の自動化から
-Knockit を叩けば同じことができる。ショートカットのカレンダー系トリガーは
-端末上の全カレンダー（iCloud / Google / Exchange）が対象になる。
-
-### 会議開始時に「会議中」にする
-
-1. ショートカット App →「オートメーション」→「新規オートメーション」
-2. トリガー: **「イベント」→「開始時」**（対象カレンダーやタイトル条件を絞ってもよい）
-3. アクション:「**URLの内容を取得**」
-   - URL: `https://<api-host>/status/me`
-   - 方法: `PUT`
-   - ヘッダ: `X-API-Key` = 発行した生キー
-   - 本文: `JSON` → `preset_label` = `会議中`
-4. 「実行前に尋ねる」をオフにして即時実行にする
-
-### 会議終了時に戻す
-
-同様に、トリガーを **「イベント」→「終了時」** にして、本文を
-`preset_label` = `入室OK`（など任意のプリセット）にしたオートメーションを作る。
-
-## 失効
-
-設定画面の「APIキー」一覧から削除する。削除後、そのキーでの
-`PUT /status/me` は `401 Unauthorized` になる。
-
-## 制約
-
-- レート制限は無い
-- キーの編集（ラベル変更）はできない。作り直しで対応する
-- APIキーで発行・一覧・失効などのキー管理 API は叩けない（JWT 専用）
+`backend/migrations/002_api_keys.sql` を DB に適用する（本番は Supabase SQL Editor、
+ローカルは `docker compose exec -T db psql -U admin -d knockit < backend/migrations/002_api_keys.sql`
+または `docker compose down -v` で作り直し）。

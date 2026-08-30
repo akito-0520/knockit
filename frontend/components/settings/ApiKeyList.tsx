@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Trash2, Plus, Copy, Check } from "lucide-react";
+import Link from "next/link";
 
 type Props = {
   token: string;
@@ -27,10 +28,10 @@ type Props = {
 };
 
 const MAX_API_KEYS = 10;
-const DOCS_URL =
-  "https://github.com/akito-0520/knockit/blob/main/docs/INTEGRATIONS.md";
+const DOCS_PATH = "/integrations";
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "https://<your-api-host>";
+const apiBase =
+  process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
 const curlExample = (key: string) =>
   [
@@ -106,14 +107,9 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
       <p className="text-sm text-muted-foreground">
         外部システム（iOS ショートカット等）から{" "}
         <code className="text-xs">PUT /status/me</code> を呼び出すためのキー。
-        <a
-          href={DOCS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline hover:text-foreground"
-        >
+        <Link href={DOCS_PATH} className="underline hover:text-foreground">
           設定手順
-        </a>
+        </Link>
       </p>
 
       <div className="border rounded-lg bg-card">
@@ -204,7 +200,7 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
         open={createdKey !== null}
         onOpenChange={(open) => !open && setCreatedKey(null)}
       >
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>APIキーを発行しました</DialogTitle>
             <DialogDescription>
@@ -215,15 +211,16 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
 
           {createdKey && (
             <div className="space-y-4">
-              <div>
+              <div className="space-y-1">
                 <Label className="text-xs">APIキー</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 text-xs bg-muted rounded px-2 py-2 break-all">
+                <div className="relative">
+                  <code className="block text-xs font-mono bg-muted rounded-md px-3 py-2.5 pr-11 break-all">
                     {createdKey.key}
                   </code>
                   <Button
-                    variant="outline"
-                    size="icon"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="absolute top-1.5 right-1.5 bg-background"
                     onClick={() => copy(createdKey.key, "key")}
                     aria-label="APIキーをコピー"
                   >
@@ -236,15 +233,16 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
                 </div>
               </div>
 
-              <div>
+              <div className="space-y-1">
                 <Label className="text-xs">使用例（curl）</Label>
-                <div className="flex items-start gap-2 mt-1">
-                  <pre className="flex-1 text-xs bg-muted rounded px-2 py-2 overflow-x-auto">
+                <div className="relative">
+                  <pre className="text-xs bg-muted rounded-md px-3 py-2.5 pr-11 overflow-x-auto">
                     {curlExample(createdKey.key)}
                   </pre>
                   <Button
-                    variant="outline"
-                    size="icon"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="absolute top-1.5 right-1.5 bg-background"
                     onClick={() => copy(curlExample(createdKey.key), "curl")}
                     aria-label="curl コマンドをコピー"
                   >
@@ -259,14 +257,12 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
 
               <p className="text-xs text-muted-foreground">
                 iOS ショートカットでの設定方法は{" "}
-                <a
-                  href={DOCS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={DOCS_PATH}
                   className="underline hover:text-foreground"
                 >
-                  INTEGRATIONS.md
-                </a>{" "}
+                  連携ガイド
+                </Link>{" "}
                 を参照してください。
               </p>
             </div>
