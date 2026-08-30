@@ -15,17 +15,17 @@
 
 ## 技術スタック
 
-| レイヤー       | 技術                                                         |
-| -------------- | ------------------------------------------------------------ |
+| レイヤー       | 技術                                                               |
+| -------------- | ------------------------------------------------------------------ |
 | フロントエンド | Next.js 16 (App Router) / TypeScript / shadcn UI / Tailwind CSS v4 |
-| バックエンド   | Go 1.22+ 標準ライブラリ (net/http)                           |
-| データベース   | PostgreSQL (Supabase)                                        |
-| 認証           | Supabase Auth (Google OAuth)                                 |
-| インフラ       | Docker / Fly.io (バックエンド)                               |
+| バックエンド   | Go 1.22+ 標準ライブラリ (net/http)                                 |
+| データベース   | PostgreSQL (Supabase)                                              |
+| 認証           | Supabase Auth (Google OAuth)                                       |
+| インフラ       | Docker / Fly.io (バックエンド)                                     |
 
 ## プロジェクト構成
 
-```
+```text
 knockit/
 ├── backend/              # Go API サーバー
 │   ├── main.go           # エントリーポイント (DI・ルーティング・サーバー起動)
@@ -54,6 +54,7 @@ knockit/
 └── docs/
     ├── ARCHITECTURE.md   # 設計ドキュメント
     ├── CHANGELOG.md      # バージョンごとの変更履歴
+    ├── INTEGRATIONS.md   # 外部連携 (APIキー)
     └── IMPLEMENTATION_GUIDE.md
 ```
 
@@ -75,7 +76,7 @@ cd knockit
 ### 2. Supabase の準備
 
 1. [Supabase](https://supabase.com) でプロジェクトを作成
-2. SQL Editor で `backend/migrations/001_create_tables.sql` を実行
+2. SQL Editor で `backend/migrations/` の SQL を番号順に実行（`001_create_tables.sql` → `002_api_keys.sql` …）
 3. Authentication → Providers で Google OAuth を有効化
 
 ### 3. バックエンドの起動
@@ -104,70 +105,77 @@ npm run dev
 
 ### バックエンド (`backend/.env`)
 
-| 変数名              | 説明                      | 例                                                    |
-| ------------------- | ------------------------- | ----------------------------------------------------- |
-| PORT                | APIサーバーのポート       | 8080                                                  |
-| DATABASE_URL        | PostgreSQL 接続文字列     | postgresql://admin:admin@localhost:5432/knockit        |
-| SUPABASE_URL        | Supabase の Project URL   | https://xxxx.supabase.co                              |
-| SUPABASE_JWT_SECRET | Supabase の JWT Secret    | your-jwt-secret                                       |
-| ALLOWED_ORIGINS     | CORS 許可オリジン         | http://localhost:3000                                 |
+| 変数名              | 説明                    | 例                                              |
+| ------------------- | ----------------------- | ----------------------------------------------- |
+| PORT                | APIサーバーのポート     | 8080                                            |
+| DATABASE_URL        | PostgreSQL 接続文字列   | postgresql://admin:admin@localhost:5432/knockit |
+| SUPABASE_URL        | Supabase の Project URL | `https://xxxx.supabase.co`                      |
+| SUPABASE_JWT_SECRET | Supabase の JWT Secret  | your-jwt-secret                                 |
+| ALLOWED_ORIGINS     | CORS 許可オリジン       | `http://localhost:3000`                         |
 
 ### フロントエンド (`frontend/.env.local`)
 
-| 変数名                        | 説明                        | 例                       |
-| ----------------------------- | --------------------------- | ------------------------ |
-| NEXT_PUBLIC_SUPABASE_URL      | Supabase の Project URL     | https://xxxx.supabase.co |
-| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase の anon public key | eyJhbGci...              |
-| NEXT_PUBLIC_API_URL           | バックエンドの URL          | http://localhost:8080    |
-| NEXT_PUBLIC_SITE_URL          | フロントエンドの URL        | http://localhost:3000    |
+| 変数名                        | 説明                        | 例                         |
+| ----------------------------- | --------------------------- | -------------------------- |
+| NEXT_PUBLIC_SUPABASE_URL      | Supabase の Project URL     | `https://xxxx.supabase.co` |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase の anon public key | eyJhbGci...                |
+| NEXT_PUBLIC_API_URL           | バックエンドの URL          | `http://localhost:8080`    |
+| NEXT_PUBLIC_SITE_URL          | フロントエンドの URL        | `http://localhost:3000`    |
 
 ## API エンドポイント
 
 ### 認証不要
 
-| メソッド | パス                         | 説明                 |
-| -------- | ---------------------------- | -------------------- |
-| GET      | /status/{username}           | 公開ステータス取得   |
-| GET      | /status/{username}/stream    | SSE リアルタイム配信 |
+| メソッド | パス                      | 説明                 |
+| -------- | ------------------------- | -------------------- |
+| GET      | /status/{username}        | 公開ステータス取得   |
+| GET      | /status/{username}/stream | SSE リアルタイム配信 |
 
 ### 認証必須
 
-| メソッド | パス              | 説明                 |
-| -------- | ----------------- | -------------------- |
-| POST     | /auth/setup       | 初回セットアップ     |
-| GET      | /auth/me          | プロフィール取得     |
-| PATCH    | /auth/me          | プロフィール更新     |
-| GET      | /status/me        | 自分のステータス取得 |
-| PUT      | /status/me        | ステータス更新       |
-| GET      | /presets          | プリセット一覧       |
-| POST     | /presets          | プリセット作成       |
-| PATCH    | /presets/{id}     | プリセット更新       |
-| DELETE   | /presets/{id}     | プリセット削除       |
+`GET /status/me` と `PUT /status/me` は JWT または `X-API-Key` ヘッダのどちらでも通る。
+その他は JWT（Supabase セッション）必須。
+
+| メソッド | パス                | 説明                                                 |
+| -------- | ------------------- | ---------------------------------------------------- |
+| POST     | /auth/setup         | 初回セットアップ                                     |
+| GET      | /auth/me            | プロフィール取得                                     |
+| PATCH    | /auth/me            | プロフィール更新                                     |
+| POST     | /auth/api-keys      | APIキー発行（生キーはこの応答のみ）                  |
+| GET      | /auth/api-keys      | APIキー一覧                                          |
+| DELETE   | /auth/api-keys/{id} | APIキー失効                                          |
+| GET      | /status/me          | 自分のステータス取得（JWT / X-API-Key）              |
+| PUT      | /status/me          | ステータス更新（JWT / X-API-Key、`preset_label` 可） |
+| GET      | /presets            | プリセット一覧                                       |
+| POST     | /presets            | プリセット作成                                       |
+| PATCH    | /presets/{id}       | プリセット更新                                       |
+| DELETE   | /presets/{id}       | プリセット削除                                       |
 
 ## デプロイ
 
-| サービス       | デプロイ先      | 備考                |
-| -------------- | --------------- | ------------------- |
-| バックエンド   | Fly.io          | リージョン: nrt     |
-| データベース   | Supabase        | PostgreSQL          |
+| サービス     | デプロイ先 | 備考            |
+| ------------ | ---------- | --------------- |
+| バックエンド | Fly.io     | リージョン: nrt |
+| データベース | Supabase   | PostgreSQL      |
 
 ## 画面構成
 
-| 画面             | パス          | 認証 | 説明                                 |
-| ---------------- | ------------- | ---- | ------------------------------------ |
-| トップページ     | /             | 不要 | サービス説明 + はじめるボタン        |
-| ログイン         | /login        | 不要 | Google OAuth                         |
-| 初回セットアップ | /setup        | 必須 | ユーザー名・表示名の設定             |
-| ダッシュボード   | /dashboard    | 必須 | ステータス変更                       |
-| 設定             | /settings     | 必須 | プロフィール編集・プリセット管理     |
-| 公開ステータス   | /{username}   | 不要 | リアルタイムステータス表示 (SSE)     |
+| 画面             | パス        | 認証 | 説明                                          |
+| ---------------- | ----------- | ---- | --------------------------------------------- |
+| トップページ     | /           | 不要 | サービス説明 + はじめるボタン                 |
+| ログイン         | /login      | 不要 | Google OAuth                                  |
+| 初回セットアップ | /setup      | 必須 | ユーザー名・表示名の設定                      |
+| ダッシュボード   | /dashboard  | 必須 | ステータス変更                                |
+| 設定             | /settings   | 必須 | プロフィール編集・プリセット管理・APIキー管理 |
+| 公開ステータス   | /{username} | 不要 | リアルタイムステータス表示 (SSE)              |
 
 ## ドキュメント
 
 | ファイル                                                  | 内容                                               |
 | --------------------------------------------------------- | -------------------------------------------------- |
-| [ARCHITECTURE.md](./docs/ARCHITECTURE.md)                 | 全体設計 (技術スタック, DB設計, API設計, 画面構成)  |
-| [CHANGELOG.md](./docs/CHANGELOG.md)                       | バージョンごとの変更履歴                            |
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md)                 | 全体設計 (技術スタック, DB設計, API設計, 画面構成) |
+| [CHANGELOG.md](./docs/CHANGELOG.md)                       | バージョンごとの変更履歴                           |
+| [INTEGRATIONS.md](./docs/INTEGRATIONS.md)                 | 外部連携 (APIキー・iOS ショートカット手順)         |
 | [IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) | 段階的な実装手順書 (Phase 0〜7)                    |
 
 ## ライセンス

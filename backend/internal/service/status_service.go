@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -19,18 +20,24 @@ type StatusRepositoryInterface interface {
 	Upsert(ctx context.Context, status *model.RoomStatus) error
 }
 
+type StatusPresetRepositoryInterface interface {
+	FindByLabel(ctx context.Context, userID, label string) (*model.Preset, error)
+}
+
 type StatusService struct {
 	userRepository   UserRepositoryInterface
 	statusRepository StatusRepositoryInterface
+	presetRepository StatusPresetRepositoryInterface
 
 	clients map[string][]chan *model.RoomStatus // userID → チャネルのリスト作成
 	mu      sync.RWMutex                        // 並行アクセスの保護
 }
 
-func NewStatusService(statusRepo StatusRepositoryInterface, userRepo UserRepositoryInterface) *StatusService {
+func NewStatusService(statusRepo StatusRepositoryInterface, userRepo UserRepositoryInterface, presetRepo StatusPresetRepositoryInterface) *StatusService {
 	return &StatusService{
 		statusRepository: statusRepo,
 		userRepository:   userRepo,
+		presetRepository: presetRepo,
 
 		clients: make(map[string][]chan *model.RoomStatus),
 	}
@@ -69,6 +76,20 @@ func (s *StatusService) GetMyStatus(ctx context.Context, userID string) (*model.
 }
 
 func (s *StatusService) UpdateStatus(ctx context.Context, userID string, req model.StatusUpdateRequest) (*model.RoomStatus, error) {
+	// preset_label が指定されていて preset_id が無ければ、ラベルからプリセットを解決する。
+	// preset_id が指定されている場合はそちらを優先し、preset_label は無視する。
+	presetIDEmpty := req.PresetID == nil || *req.PresetID == ""
+	if presetIDEmpty && req.PresetLabel != nil && *req.PresetLabel != "" {
+		preset, err := s.presetRepository.FindByLabel(ctx, userID, *req.PresetLabel)
+		if err != nil {
+			if errors.Is(err, model.ErrNotFound) {
+				return nil, model.ErrValidation
+			}
+			return nil, err
+		}
+		req.PresetID = &preset.ID
+	}
+
 	// バリデーション
 	errs := validator.ValidateStatusUpdate(req)
 	if len(errs) > 0 {

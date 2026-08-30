@@ -76,6 +76,19 @@ func (r *PresetRepository) FindByID(ctx context.Context, id string) (*model.Pres
 	return &p, nil
 }
 
+func (r *PresetRepository) FindByLabel(ctx context.Context, userID, label string) (*model.Preset, error) {
+	var p model.Preset
+	query := "SELECT id, user_id, label, color, display_order, created_at, updated_at FROM presets WHERE user_id = $1 AND label = $2"
+	err := r.db.QueryRowContext(ctx, query, userID, label).Scan(&p.ID, &p.UserID, &p.Label, &p.Color, &p.DisplayOrder, &p.CreatedAt, &p.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, model.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
 func (r *PresetRepository) Create(ctx context.Context, preset *model.Preset) error {
 	query := "INSERT INTO presets (user_id, label, color, display_order) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at"
 	err := r.db.QueryRowContext(ctx, query, preset.UserID, preset.Label, preset.Color, preset.DisplayOrder).Scan(&preset.ID, &preset.CreatedAt, &preset.UpdatedAt)

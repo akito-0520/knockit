@@ -7,6 +7,7 @@ sb.mock(import("../lib/api/auth.ts"));
 sb.mock(import("../lib/api/preset.ts"));
 sb.mock(import("../lib/api/status.ts"));
 sb.mock(import("../lib/api/inquiry.ts"));
+sb.mock(import("../lib/api/apiKey.ts"));
 sb.mock(import("../lib/supabase/client.ts"));
 
 const preview: Preview = {

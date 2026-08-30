@@ -3,6 +3,7 @@ package validator
 import (
 	"net/mail"
 	"regexp"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/akito-0520/knockit/internal/model"
@@ -48,9 +49,10 @@ func ValidateStatusUpdate(req model.StatusUpdateRequest) []model.ValidationError
 	var errs []model.ValidationError
 
 	presetEmpty := req.PresetID == nil || *req.PresetID == ""
+	labelEmpty := req.PresetLabel == nil || *req.PresetLabel == ""
 
-	if presetEmpty && req.CustomMessage == "" {
-		errs = append(errs, model.ValidationError{Field: "request", Message: "either preset_id or custom_message is required"})
+	if presetEmpty && labelEmpty && req.CustomMessage == "" {
+		errs = append(errs, model.ValidationError{Field: "request", Message: "either preset_id, preset_label or custom_message is required"})
 		return errs
 	}
 
@@ -133,6 +135,17 @@ func ValidateCreatePreset(req model.CreatePresetRequest) []model.ValidationError
 
 func ValidateUpdatePreset(req model.UpdatePresetRequest) []model.ValidationError {
 	return validatePresetFields(req.Label, req.Color, req.DisplayOrder)
+}
+
+func ValidateAPIKeyLabel(label string) []model.ValidationError {
+	var errs []model.ValidationError
+
+	length := utf8.RuneCountInString(strings.TrimSpace(label))
+	if length < 1 || length > 50 {
+		errs = append(errs, model.ValidationError{Field: "label", Message: "label must be between 1 and 50 characters"})
+	}
+
+	return errs
 }
 
 func isValidColor(s string) bool {
