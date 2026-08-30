@@ -59,7 +59,7 @@ export default async function SettingsPage() {
         <ApiKeyList token={token} initialApiKeys={apiKeys} />
       </section>
 
-      <section className="space-y-3 pt-4 border-t">
+      <section className="space-y-3 mb-6 pt-6 border-t">
         <h2 className="text-xl font-semibold">その他</h2>
         <div className="flex flex-wrap gap-2">
           <TutorialButton />
@@ -72,7 +72,7 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="space-y-3 pt-4 border-t">
+      <section className="space-y-3 pt-6 border-t">
         <h2 className="text-xl font-semibold">アカウント</h2>
         <LogoutButton />
       </section>
