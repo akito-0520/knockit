@@ -17,6 +17,17 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-30
+
+### Added
+
+- APIキーによる外部システムからのステータス更新。設定画面でキーを発行・一覧・失効でき
+  （`POST/GET/DELETE /auth/api-keys`）、`PUT /status/me` は JWT または `X-API-Key`
+  ヘッダのどちらでも通る。iOS ショートカットでのカレンダー連携手順は
+  `docs/INTEGRATIONS.md` を参照。(#43)
+- `PUT /status/me` が `preset_label` でプリセットを指定できるように（UUID 不要）。
+  `preset_id` と併用された場合は `preset_id` を優先する。
+
 ## [1.1.0] - 2026-08-30
 
 ### Added

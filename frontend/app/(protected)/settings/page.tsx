@@ -1,9 +1,11 @@
 import { getCurrentUser } from "@/lib/api/auth";
 import { getUserPresets } from "@/lib/api/preset";
+import { getApiKeys } from "@/lib/api/apiKey";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import ProfileForm from "@/components/settings/ProfileForm";
 import PresetList from "@/components/settings/PresetList";
+import ApiKeyList from "@/components/settings/ApiKeyList";
 import LogoutButton from "@/components/settings/LogoutButton";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,9 +27,10 @@ export default async function SettingsPage() {
 
   if (!token) redirect("/login");
 
-  const [currentUser, presets] = await Promise.all([
+  const [currentUser, presets, apiKeys] = await Promise.all([
     getCurrentUser(token).catch(() => null),
     getUserPresets(token).catch(() => []),
+    getApiKeys(token).catch(() => []),
   ]);
 
   if (!currentUser) redirect("/setup");
@@ -49,6 +52,11 @@ export default async function SettingsPage() {
       <section className="space-y-3 mb-6 md:flex md:flex-col md:min-h-0 md:flex-1">
         <h2 className="text-xl font-semibold shrink-0">プリセット</h2>
         <PresetList token={token} initialPresets={presets} />
+      </section>
+
+      <section className="space-y-3 mb-6 shrink-0">
+        <h2 className="text-xl font-semibold">APIキー</h2>
+        <ApiKeyList token={token} initialApiKeys={apiKeys} />
       </section>
 
       <section className="space-y-3 pt-4 border-t shrink-0">

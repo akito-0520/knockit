@@ -12,6 +12,7 @@ type RoomStatus struct {
 
 type StatusUpdateRequest struct {
 	PresetID      *string `json:"preset_id"`
+	PresetLabel   *string `json:"preset_label"`
 	CustomMessage string  `json:"custom_message"`
 }
 

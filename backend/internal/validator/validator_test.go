@@ -224,6 +224,14 @@ func TestValidateStatusUpdate(t *testing.T) {
 			wantFields:   nil,
 		},
 		{
+			name: "正常系: preset_label のみ",
+			req: model.StatusUpdateRequest{
+				PresetLabel: strPtr("会議中"),
+			},
+			wantErrCount: 0,
+			wantFields:   nil,
+		},
+		{
 			name: "異常系: 両方 nil / 空",
 			req: model.StatusUpdateRequest{
 				PresetID:      nil,
@@ -518,6 +526,36 @@ func TestValidateUpdatePreset(t *testing.T) {
 
 			if !reflect.DeepEqual(gotFields, wantFields) {
 				t.Errorf("got fields %v, want %v", gotFields, wantFields)
+			}
+		})
+	}
+}
+
+func TestValidateAPIKeyLabel(t *testing.T) {
+	tests := []struct {
+		name         string
+		label        string
+		wantErrCount int
+	}{
+		{name: "正常系", label: "iOS ショートカット", wantErrCount: 0},
+		{name: "正常系: 前後の空白は無視して判定", label: "  key  ", wantErrCount: 0},
+		{name: "正常系: 50文字ちょうど", label: strings.Repeat("a", 50), wantErrCount: 0},
+		{name: "異常系: 空文字", label: "", wantErrCount: 1},
+		{name: "異常系: 空白のみ", label: "   ", wantErrCount: 1},
+		{name: "異常系: 51文字", label: strings.Repeat("a", 51), wantErrCount: 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := validator.ValidateAPIKeyLabel(tt.label)
+
+			if len(errs) != tt.wantErrCount {
+				t.Errorf("got %d errors, want %d, errs=%+v", len(errs), tt.wantErrCount, errs)
+			}
+			for _, e := range errs {
+				if e.Field != "label" {
+					t.Errorf("unexpected field %q", e.Field)
+				}
 			}
 		})
 	}

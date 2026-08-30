@@ -44,13 +44,15 @@ func main() {
 	presetRepo := repository.NewPresetRepository(db)
 	inquiryRepo := repository.NewInquiryRepository(db)
 	healthRepo := repository.NewHealthRepository(db)
+	apiKeyRepo := repository.NewAPIKeyRepository(db)
 
 	// サービスの初期化
 	authService := service.NewAuthService(userRepo, statusRepo, presetRepo)
-	statusService := service.NewStatusService(statusRepo, userRepo)
+	statusService := service.NewStatusService(statusRepo, userRepo, presetRepo)
 	presetService := service.NewPresetService(presetRepo)
 	inquiryService := service.NewInquiryRepository(inquiryRepo)
 	healthService := service.NewHealthService(healthRepo)
+	apiKeyService := service.NewAPIKeyService(apiKeyRepo)
 
 	// ハンドラーの初期化
 	authHandler := handler.NewAuthHandler(authService)
@@ -58,12 +60,14 @@ func main() {
 	presetHandler := handler.NewPresetHandler(presetService)
 	inquiryHandler := handler.NewInquiryHandler(inquiryService)
 	healthHandler := handler.NewHealthHandler(healthService)
+	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
 
 	// ミドルウェアの初期化
 	authMiddleware, err := middleware.NewAuthMiddleware(cfg.SupabaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
+	apiKeyMiddleware := middleware.NewAPIKeyMiddleware(apiKeyService)
 	corsMiddleware := middleware.CORS(cfg.AllowedOrigins)
 
 	// ルーティングの設定
@@ -77,11 +81,16 @@ func main() {
 
 	// 認証必要
 	auth := authMiddleware.Authenticate
+	// JWT または X-API-Key のどちらでも通す（外部システムからのステータス更新用）
+	eitherAuth := apiKeyMiddleware.EitherAuth(auth)
 	mux.Handle("POST /auth/setup", auth(http.HandlerFunc(authHandler.SetupUser)))
 	mux.Handle("GET /auth/me", auth(http.HandlerFunc(authHandler.GetCurrentUser)))
 	mux.Handle("PATCH /auth/me", auth(http.HandlerFunc(authHandler.UpdateUser)))
-	mux.Handle("GET /status/me", auth(http.HandlerFunc(statusHandler.GetMyStatus)))
-	mux.Handle("PUT /status/me", auth(http.HandlerFunc(statusHandler.UpdateStatus)))
+	mux.Handle("POST /auth/api-keys", auth(http.HandlerFunc(apiKeyHandler.CreateAPIKey)))
+	mux.Handle("GET /auth/api-keys", auth(http.HandlerFunc(apiKeyHandler.ListAPIKeys)))
+	mux.Handle("DELETE /auth/api-keys/{id}", auth(http.HandlerFunc(apiKeyHandler.DeleteAPIKey)))
+	mux.Handle("GET /status/me", eitherAuth(http.HandlerFunc(statusHandler.GetMyStatus)))
+	mux.Handle("PUT /status/me", eitherAuth(http.HandlerFunc(statusHandler.UpdateStatus)))
 	mux.Handle("GET /presets", auth(http.HandlerFunc(presetHandler.GetUserPresets)))
 	mux.Handle("POST /presets", auth(http.HandlerFunc(presetHandler.CreatePreset)))
 	mux.Handle("PATCH /presets/{id}", auth(http.HandlerFunc(presetHandler.UpdatePreset)))

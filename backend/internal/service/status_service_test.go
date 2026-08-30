@@ -42,6 +42,16 @@ func (m *mockStatusRepository) Upsert(ctx context.Context, status *model.RoomSta
 	return m.upsertFunc(ctx, status)
 }
 
+// ---------- Preset Repository のモック ---------------
+
+type mockStatusPresetRepository struct {
+	findByLabelFunc func(ctx context.Context, userID, label string) (*model.Preset, error)
+}
+
+func (m *mockStatusPresetRepository) FindByLabel(ctx context.Context, userID, label string) (*model.Preset, error) {
+	return m.findByLabelFunc(ctx, userID, label)
+}
+
 // ヘルパー関数(*だとnilの時パニックになる)
 func derefStr(p *string) string {
 	if p == nil {
@@ -49,6 +59,8 @@ func derefStr(p *string) string {
 	}
 	return *p
 }
+
+func strPtr(s string) *string { return &s }
 
 func TestGetStatusByUsername(t *testing.T) {
 	uuid := "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
@@ -115,7 +127,7 @@ func TestGetStatusByUsername(t *testing.T) {
 				findByUserIDFunc: tt.findByUserIDFunc,
 			}
 
-			service := NewStatusService(statusMock, userMock)
+			service := NewStatusService(statusMock, userMock, &mockStatusPresetRepository{})
 
 			_, _, err := service.GetStatusByUsername(context.Background(), tt.username)
 
@@ -175,7 +187,7 @@ func TestGetMyStatus(t *testing.T) {
 			}
 			userMock := &mockUserRepository{}
 
-			statusService := NewStatusService(statusMock, userMock)
+			statusService := NewStatusService(statusMock, userMock, &mockStatusPresetRepository{})
 
 			status, err := statusService.GetMyStatus(context.Background(), uuid)
 
@@ -222,9 +234,12 @@ func TestUpdateStatus(t *testing.T) {
 	uuid := "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 	dbErr := errors.New("connection timeout")
 
+	presetID := "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+
 	tests := []struct {
 		name             string
 		req              model.StatusUpdateRequest
+		findByLabelFunc  func(ctx context.Context, userID, label string) (*model.Preset, error)
 		upsertFunc       func(ctx context.Context, status *model.RoomStatus) error
 		upsertCalls      int
 		wantStatus       *model.RoomStatus
@@ -248,6 +263,58 @@ func TestUpdateStatus(t *testing.T) {
 			},
 			wantNotification: true,
 			wantErr:          nil,
+		},
+		{
+			name: "正常系: preset_label をプリセットIDに解決する",
+			req: model.StatusUpdateRequest{
+				PresetLabel: strPtr("会議中"),
+			},
+			findByLabelFunc: func(ctx context.Context, userID, label string) (*model.Preset, error) {
+				if label != "会議中" {
+					t.Errorf("FindByLabel called with label=%q, want %q", label, "会議中")
+				}
+				return &model.Preset{ID: presetID, UserID: userID, Label: label}, nil
+			},
+			upsertFunc:  func(ctx context.Context, status *model.RoomStatus) error { return nil },
+			upsertCalls: 1,
+			wantStatus: &model.RoomStatus{
+				UserID:   uuid,
+				PresetID: &presetID,
+			},
+			wantNotification: true,
+			wantErr:          nil,
+		},
+		{
+			name: "正常系: preset_id と preset_label 両方 → preset_id 優先",
+			req: model.StatusUpdateRequest{
+				PresetID:    &uuid,
+				PresetLabel: strPtr("会議中"),
+			},
+			findByLabelFunc: func(ctx context.Context, userID, label string) (*model.Preset, error) {
+				t.Error("FindByLabel should not be called when preset_id is present")
+				return nil, nil
+			},
+			upsertFunc:  func(ctx context.Context, status *model.RoomStatus) error { return nil },
+			upsertCalls: 1,
+			wantStatus: &model.RoomStatus{
+				UserID:   uuid,
+				PresetID: &uuid,
+			},
+			wantNotification: true,
+			wantErr:          nil,
+		},
+		{
+			name: "異常系: preset_label がプリセットに一致しない",
+			req: model.StatusUpdateRequest{
+				PresetLabel: strPtr("存在しない"),
+			},
+			findByLabelFunc: func(ctx context.Context, userID, label string) (*model.Preset, error) {
+				return nil, model.ErrNotFound
+			},
+			upsertCalls:      0,
+			wantStatus:       nil,
+			wantNotification: false,
+			wantErr:          model.ErrValidation,
 		},
 		{
 			name: "異常系: presetID と customMessage の両方が空",
@@ -283,8 +350,11 @@ func TestUpdateStatus(t *testing.T) {
 				upsertFunc: tt.upsertFunc,
 			}
 			mockUserRepository := &mockUserRepository{}
+			mockPresetRepository := &mockStatusPresetRepository{
+				findByLabelFunc: tt.findByLabelFunc,
+			}
 
-			statusService := NewStatusService(mockStatusRepository, mockUserRepository)
+			statusService := NewStatusService(mockStatusRepository, mockUserRepository, mockPresetRepository)
 
 			// --- 購読開始 ---
 			ch := statusService.Subscribe(uuid)

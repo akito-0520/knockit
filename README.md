@@ -54,6 +54,7 @@ knockit/
 └── docs/
     ├── ARCHITECTURE.md   # 設計ドキュメント
     ├── CHANGELOG.md      # バージョンごとの変更履歴
+    ├── INTEGRATIONS.md   # 外部連携 (APIキー)
     └── IMPLEMENTATION_GUIDE.md
 ```
 
@@ -75,7 +76,7 @@ cd knockit
 ### 2. Supabase の準備
 
 1. [Supabase](https://supabase.com) でプロジェクトを作成
-2. SQL Editor で `backend/migrations/001_create_tables.sql` を実行
+2. SQL Editor で `backend/migrations/` の SQL を番号順に実行（`001_create_tables.sql` → `002_api_keys.sql` …）
 3. Authentication → Providers で Google OAuth を有効化
 
 ### 3. バックエンドの起動
@@ -132,17 +133,23 @@ npm run dev
 
 ### 認証必須
 
-| メソッド | パス              | 説明                 |
-| -------- | ----------------- | -------------------- |
-| POST     | /auth/setup       | 初回セットアップ     |
-| GET      | /auth/me          | プロフィール取得     |
-| PATCH    | /auth/me          | プロフィール更新     |
-| GET      | /status/me        | 自分のステータス取得 |
-| PUT      | /status/me        | ステータス更新       |
-| GET      | /presets          | プリセット一覧       |
-| POST     | /presets          | プリセット作成       |
-| PATCH    | /presets/{id}     | プリセット更新       |
-| DELETE   | /presets/{id}     | プリセット削除       |
+`GET /status/me` と `PUT /status/me` は JWT または `X-API-Key` ヘッダのどちらでも通る。
+その他は JWT（Supabase セッション）必須。
+
+| メソッド | パス                | 説明                                        |
+| -------- | ------------------- | ------------------------------------------- |
+| POST     | /auth/setup         | 初回セットアップ                            |
+| GET      | /auth/me            | プロフィール取得                            |
+| PATCH    | /auth/me            | プロフィール更新                            |
+| POST     | /auth/api-keys      | APIキー発行（生キーはこの応答のみ）         |
+| GET      | /auth/api-keys      | APIキー一覧                                 |
+| DELETE   | /auth/api-keys/{id} | APIキー失効                                 |
+| GET      | /status/me          | 自分のステータス取得（JWT / X-API-Key）     |
+| PUT      | /status/me          | ステータス更新（JWT / X-API-Key、`preset_label` 可） |
+| GET      | /presets            | プリセット一覧                              |
+| POST     | /presets            | プリセット作成                              |
+| PATCH    | /presets/{id}       | プリセット更新                              |
+| DELETE   | /presets/{id}       | プリセット削除                              |
 
 ## デプロイ
 
@@ -159,7 +166,7 @@ npm run dev
 | ログイン         | /login        | 不要 | Google OAuth                         |
 | 初回セットアップ | /setup        | 必須 | ユーザー名・表示名の設定             |
 | ダッシュボード   | /dashboard    | 必須 | ステータス変更                       |
-| 設定             | /settings     | 必須 | プロフィール編集・プリセット管理     |
+| 設定             | /settings     | 必須 | プロフィール編集・プリセット管理・APIキー管理 |
 | 公開ステータス   | /{username}   | 不要 | リアルタイムステータス表示 (SSE)     |
 
 ## ドキュメント
@@ -168,6 +175,7 @@ npm run dev
 | --------------------------------------------------------- | -------------------------------------------------- |
 | [ARCHITECTURE.md](./docs/ARCHITECTURE.md)                 | 全体設計 (技術スタック, DB設計, API設計, 画面構成)  |
 | [CHANGELOG.md](./docs/CHANGELOG.md)                       | バージョンごとの変更履歴                            |
+| [INTEGRATIONS.md](./docs/INTEGRATIONS.md)                 | 外部連携 (APIキー・iOS ショートカット手順)          |
 | [IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) | 段階的な実装手順書 (Phase 0〜7)                    |
 
 ## ライセンス
