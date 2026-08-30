@@ -9,7 +9,7 @@ Go の学習ポイントも各所に記載しています。
 
 ### 0-1. ツールのインストール
 
-- Go 1.22+ — https://go.dev/dl/
+- Go 1.22+ — `https://go.dev/dl/`
 - Node.js 20+ — https://nodejs.org/
 - Docker Desktop — https://www.docker.com/products/docker-desktop/
 - Git — https://git-scm.com/
@@ -231,10 +231,10 @@ Supabase の **SQL Editor** でこの SQL を実行してテーブルを作成�
 
 1ユーザー1行の UPDATE 方式。初回は INSERT、2回目以降は UPDATE で上書きする。
 
-| メソッド                          | 説明                                                          |
-| --------------------------------- | ------------------------------------------------------------- |
-| `FindByUserID(ctx, userID)`       | SELECT ... WHERE user_id = $1                                 |
-| `Upsert(ctx, status)`             | 既存行があれば UPDATE、なければ INSERT (INSERT ... ON CONFLICT) |
+| メソッド                    | 説明                                                            |
+| --------------------------- | --------------------------------------------------------------- |
+| `FindByUserID(ctx, userID)` | SELECT ... WHERE user_id = $1                                   |
+| `Upsert(ctx, status)`       | 既存行があれば UPDATE、なければ INSERT (INSERT ... ON CONFLICT) |
 
 `Upsert` の実装:
 
@@ -252,14 +252,14 @@ query := `
 
 各ユーザーが自分専用のプリセットを CRUD する。
 
-| メソッド                              | SQL                                                     |
-| ------------------------------------- | ------------------------------------------------------- |
-| `FindByUserID(ctx, userID)`           | SELECT ... WHERE user_id = $1 ORDER BY display_order ASC |
-| `FindByID(ctx, id)`                   | SELECT ... WHERE id = $1                                 |
-| `Create(ctx, preset)`                 | INSERT INTO presets ...                                  |
-| `Update(ctx, preset)`                 | UPDATE presets SET ... WHERE id = $1                     |
-| `Delete(ctx, id)`                     | DELETE FROM presets WHERE id = $1                        |
-| `CreateDefaultPresets(ctx, userID)`   | デフォルトプリセットを一括 INSERT (Go ハードコード)        |
+| メソッド                            | SQL                                                      |
+| ----------------------------------- | -------------------------------------------------------- |
+| `FindByUserID(ctx, userID)`         | SELECT ... WHERE user_id = $1 ORDER BY display_order ASC |
+| `FindByID(ctx, id)`                 | SELECT ... WHERE id = $1                                 |
+| `Create(ctx, preset)`               | INSERT INTO presets ...                                  |
+| `Update(ctx, preset)`               | UPDATE presets SET ... WHERE id = $1                     |
+| `Delete(ctx, id)`                   | DELETE FROM presets WHERE id = $1                        |
+| `CreateDefaultPresets(ctx, userID)` | デフォルトプリセットを一括 INSERT (Go ハードコード)      |
 
 > **Go 学習ポイント**
 >
@@ -283,11 +283,11 @@ query := `
 
 `internal/service/auth_service.go`:
 
-| メソッド                                         | ロジック                                               |
-| ------------------------------------------------ | ------------------------------------------------------ |
+| メソッド                              | ロジック                                                                          |
+| ------------------------------------- | --------------------------------------------------------------------------------- |
 | `SetupUser(ctx, supabaseUserID, req)` | ユーザー存在チェック → ユーザー名重複チェック → Create → デフォルトプリセット作成 |
-| `GetCurrentUser(ctx, userID)`                    | FindByID のラッパー                                    |
-| `UpdateUser(ctx, userID, req)`                   | FindByID → フィールド更新 → Update                     |
+| `GetCurrentUser(ctx, userID)`         | FindByID のラッパー                                                               |
+| `UpdateUser(ctx, userID, req)`        | FindByID → フィールド更新 → Update                                                |
 
 ### 3-2. StatusService の実装 (SSE対応)
 
@@ -310,14 +310,14 @@ type StatusService struct {
 }
 ```
 
-| メソッド                             | 説明                                                              |
-| ------------------------------------ | ----------------------------------------------------------------- |
+| メソッド                             | 説明                                                        |
+| ------------------------------------ | ----------------------------------------------------------- |
 | `GetStatusByUsername(ctx, username)` | ユーザー名 → FindByUsername → FindByUserID → レスポンス構築 |
-| `GetMyStatus(ctx, userID)`           | 自分のステータス取得                                         |
-| `UpdateStatus(ctx, userID, req)`     | プリセット存在確認 → Upsert (UPDATE) → **SSE通知**           |
-| `Subscribe(userID)`                  | クライアント登録、`chan` 返却                                     |
-| `Unsubscribe(client)`                | クライアント削除、`close(channel)`                                |
-| `notifyClients(userID, status)`      | 該当ユーザー購読中の全クライアントにノンブロッキング送信          |
+| `GetMyStatus(ctx, userID)`           | 自分のステータス取得                                        |
+| `UpdateStatus(ctx, userID, req)`     | プリセット存在確認 → Upsert (UPDATE) → **SSE通知**          |
+| `Subscribe(userID)`                  | クライアント登録、`chan` 返却                               |
+| `Unsubscribe(client)`                | クライアント削除、`close(channel)`                          |
+| `notifyClients(userID, status)`      | 該当ユーザー購読中の全クライアントにノンブロッキング送信    |
 
 `notifyClients` のノンブロッキング送信パターン:
 
@@ -342,13 +342,13 @@ default:
 
 `internal/service/preset_service.go`:
 
-| メソッド                                | 説明                                                       |
-| --------------------------------------- | ---------------------------------------------------------- |
-| `GetUserPresets(ctx, userID)`           | FindByUserID → 各要素を `ToResponse()` で変換               |
-| `CreatePreset(ctx, userID, req)`        | バリデーション → Create → レスポンス返却                     |
-| `UpdatePreset(ctx, userID, id, req)`    | FindByID → 所有者チェック → Update → レスポンス返却          |
-| `DeletePreset(ctx, userID, id)`         | FindByID → 所有者チェック → Delete                           |
-| `CreateDefaultPresets(ctx, userID)`     | デフォルトプリセットを一括作成 (ユーザーセットアップ時に呼ぶ) |
+| メソッド                             | 説明                                                          |
+| ------------------------------------ | ------------------------------------------------------------- |
+| `GetUserPresets(ctx, userID)`        | FindByUserID → 各要素を `ToResponse()` で変換                 |
+| `CreatePreset(ctx, userID, req)`     | バリデーション → Create → レスポンス返却                      |
+| `UpdatePreset(ctx, userID, id, req)` | FindByID → 所有者チェック → Update → レスポンス返却           |
+| `DeletePreset(ctx, userID, id)`      | FindByID → 所有者チェック → Delete                            |
+| `CreateDefaultPresets(ctx, userID)`  | デフォルトプリセットを一括作成 (ユーザーセットアップ時に呼ぶ) |
 
 所有者チェック: `preset.UserID != userID` なら `ErrForbidden` を返す
 

@@ -21,17 +21,17 @@
 
 ## 2. 技術スタック
 
-| レイヤー       | 技術                                      | 選定理由                                       |
-| -------------- | ----------------------------------------- | ---------------------------------------------- |
-| フロントエンド | Next.js 16 (App Router) + TypeScript      | SSR/SSG対応、ファイルベースルーティング         |
-| UIライブラリ   | shadcn UI + Tailwind CSS v4               | コンポーネントアーキテクチャ、レスポンシブ対応  |
-| バリデーション | Zod + react-hook-form                     | スキーマベースのバリデーション                  |
-| バックエンド   | Go 1.22+ 標準ライブラリ (net/http)        | Go学習目的、フレームワーク不使用               |
-| データベース   | PostgreSQL (Supabase)                     | 無料枠あり、マネージドサービス                 |
-| 認証           | Supabase Auth (Google OAuth)              | フロントでOAuth → Go側でJWT検証                |
-| リアルタイム   | Server-Sent Events (SSE)                  | 標準ライブラリのみで実装可能、単方向配信に最適 |
-| コンテナ       | Docker / Docker Compose                   | 開発環境の統一                                 |
-| デプロイ       | Fly.io (バックエンド)                     | リージョン nrt (東京) で低レイテンシ           |
+| レイヤー       | 技術                                 | 選定理由                                       |
+| -------------- | ------------------------------------ | ---------------------------------------------- |
+| フロントエンド | Next.js 16 (App Router) + TypeScript | SSR/SSG対応、ファイルベースルーティング        |
+| UIライブラリ   | shadcn UI + Tailwind CSS v4          | コンポーネントアーキテクチャ、レスポンシブ対応 |
+| バリデーション | Zod + react-hook-form                | スキーマベースのバリデーション                 |
+| バックエンド   | Go 1.22+ 標準ライブラリ (net/http)   | Go学習目的、フレームワーク不使用               |
+| データベース   | PostgreSQL (Supabase)                | 無料枠あり、マネージドサービス                 |
+| 認証           | Supabase Auth (Google OAuth)         | フロントでOAuth → Go側でJWT検証                |
+| リアルタイム   | Server-Sent Events (SSE)             | 標準ライブラリのみで実装可能、単方向配信に最適 |
+| コンテナ       | Docker / Docker Compose              | 開発環境の統一                                 |
+| デプロイ       | Fly.io (バックエンド)                | リージョン nrt (東京) で低レイテンシ           |
 
 ---
 
@@ -250,13 +250,13 @@ presets ||--o{ room_statuses : "referenced by"
 
 1ユーザーにつき1行。ステータス更新時は UPDATE で上書きする。
 
-| カラム         | 型           | 制約                             | 説明                    |
-| -------------- | ------------ | -------------------------------- | ----------------------- |
-| id             | UUID         | PK, DEFAULT uuid_generate_v4()   | ステータスID            |
+| カラム         | 型           | 制約                             | 説明                      |
+| -------------- | ------------ | -------------------------------- | ------------------------- |
+| id             | UUID         | PK, DEFAULT uuid_generate_v4()   | ステータスID              |
 | user_id        | UUID         | FK → users(id), UNIQUE, NOT NULL | ユーザーID (1ユーザー1行) |
-| preset_id      | UUID         | FK → presets(id), NULL可         | プリセットID            |
-| custom_message | VARCHAR(200) | DEFAULT ''                       | カスタムメッセージ      |
-| updated_at     | TIMESTAMPTZ  | DEFAULT NOW()                    | 更新日時                |
+| preset_id      | UUID         | FK → presets(id), NULL可         | プリセットID              |
+| custom_message | VARCHAR(200) | DEFAULT ''                       | カスタムメッセージ        |
+| updated_at     | TIMESTAMPTZ  | DEFAULT NOW()                    | 更新日時                  |
 
 #### インデックス
 
@@ -310,37 +310,37 @@ presets ||--o{ room_statuses : "referenced by"
 
 #### 認証不要
 
-| メソッド | パス                         | 説明                         |
-| -------- | ---------------------------- | ---------------------------- |
-| GET      | /status/{username}           | ユーザーの公開ステータス取得 |
-| GET      | /status/{username}/stream    | SSE リアルタイム配信         |
+| メソッド | パス                      | 説明                         |
+| -------- | ------------------------- | ---------------------------- |
+| GET      | /status/{username}        | ユーザーの公開ステータス取得 |
+| GET      | /status/{username}/stream | SSE リアルタイム配信         |
 
 #### 認証必須 (Authorization: Bearer {JWT})
 
-| メソッド | パス              | 説明                   |
-| -------- | ----------------- | ---------------------- |
-| POST     | /auth/setup       | 初回ユーザー名設定     |
-| GET      | /auth/me          | 自分のプロフィール取得 |
-| PATCH    | /auth/me          | プロフィール更新       |
-| GET      | /status/me        | 自分のステータス取得   |
-| PUT      | /status/me        | ステータス更新         |
-| GET      | /presets          | 自分のプリセット一覧   |
-| POST     | /presets          | プリセット作成         |
-| PATCH    | /presets/{id}     | プリセット更新         |
-| DELETE   | /presets/{id}     | プリセット削除         |
+| メソッド | パス          | 説明                   |
+| -------- | ------------- | ---------------------- |
+| POST     | /auth/setup   | 初回ユーザー名設定     |
+| GET      | /auth/me      | 自分のプロフィール取得 |
+| PATCH    | /auth/me      | プロフィール更新       |
+| GET      | /status/me    | 自分のステータス取得   |
+| PUT      | /status/me    | ステータス更新         |
+| GET      | /presets      | 自分のプリセット一覧   |
+| POST     | /presets      | プリセット作成         |
+| PATCH    | /presets/{id} | プリセット更新         |
+| DELETE   | /presets/{id} | プリセット削除         |
 
 ---
 
 ## 7. 画面構成
 
-| 画面             | パス          | 認証 | 説明                                 |
-| ---------------- | ------------- | ---- | ------------------------------------ |
-| トップページ     | /             | 不要 | アイコン + サービス説明 + はじめるボタン |
-| ログイン         | /login        | 不要 | Google OAuth                         |
-| 初回セットアップ | /setup        | 必須 | ユーザー名・表示名の設定             |
-| ダッシュボード   | /dashboard    | 必須 | ステータス変更                       |
-| 設定             | /settings     | 必須 | プロフィール編集・プリセット管理・ログアウト |
-| 公開ステータス   | /{username}   | 不要 | リアルタイムステータス表示 (SSE)     |
+| 画面             | パス        | 認証 | 説明                                         |
+| ---------------- | ----------- | ---- | -------------------------------------------- |
+| トップページ     | /           | 不要 | アイコン + サービス説明 + はじめるボタン     |
+| ログイン         | /login      | 不要 | Google OAuth                                 |
+| 初回セットアップ | /setup      | 必須 | ユーザー名・表示名の設定                     |
+| ダッシュボード   | /dashboard  | 必須 | ステータス変更                               |
+| 設定             | /settings   | 必須 | プロフィール編集・プリセット管理・ログアウト |
+| 公開ステータス   | /{username} | 不要 | リアルタイムステータス表示 (SSE)             |
 
 ### ルートグループ
 
@@ -388,8 +388,8 @@ presets ||--o{ room_statuses : "referenced by"
 
 ## 9. デプロイ構成
 
-| サービス       | プラットフォーム | 備考                                    |
-| -------------- | ---------------- | --------------------------------------- |
-| バックエンド   | Fly.io           | Docker デプロイ、リージョン nrt (東京)  |
-| データベース   | Supabase         | PostgreSQL                              |
-| 認証           | Supabase Auth    | Google OAuth                            |
+| サービス     | プラットフォーム | 備考                                   |
+| ------------ | ---------------- | -------------------------------------- |
+| バックエンド | Fly.io           | Docker デプロイ、リージョン nrt (東京) |
+| データベース | Supabase         | PostgreSQL                             |
+| 認証         | Supabase Auth    | Google OAuth                           |
