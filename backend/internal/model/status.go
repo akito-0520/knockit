@@ -16,7 +16,8 @@ type StatusUpdateRequest struct {
 }
 
 type StatusResponse struct {
-	DisplayName   string `json:"display_name"`
-	Preset        Preset `json:"preset"`
-	CustomMessage string `json:"custom_message"`
+	DisplayName   string    `json:"display_name"`
+	Preset        Preset    `json:"preset"`
+	CustomMessage string    `json:"custom_message"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }

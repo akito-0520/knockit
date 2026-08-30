@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { StatusResponse } from "@/types/roomStatus";
 import { camelize } from "@/lib/api";
+import { formatRelativeTime } from "@/lib/time";
 import { Card, CardContent } from "@/components/ui/card";
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
 
 export default function PublicStatusCard({ username, initialStatus }: Props) {
   const [status, setStatus] = useState(initialStatus);
+  // 経過時間の表示を一定間隔で再計算するためだけの再レンダートリガー
+  const [, tick] = useReducer((n: number) => n + 1, 0);
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -24,6 +27,16 @@ export default function PublicStatusCard({ username, initialStatus }: Props) {
 
     return () => eventSource.close();
   }, [username]);
+
+  // 「最終更新: 3分前」の表示を経過に合わせて更新する
+  useEffect(() => {
+    const timer = setInterval(tick, 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const relativeUpdatedAt = status.updatedAt
+    ? formatRelativeTime(status.updatedAt)
+    : "";
 
   return (
     <Card>
@@ -44,6 +57,14 @@ export default function PublicStatusCard({ username, initialStatus }: Props) {
         {status.customMessage && (
           <p className="text-center text-lg md:text-2xl lg:text-6xl">
             {status.customMessage}
+          </p>
+        )}
+        {relativeUpdatedAt && (
+          <p
+            className="text-center text-xs md:text-sm text-muted-foreground"
+            suppressHydrationWarning
+          >
+            最終更新: {relativeUpdatedAt}
           </p>
         )}
       </CardContent>

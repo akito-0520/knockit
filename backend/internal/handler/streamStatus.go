@@ -58,6 +58,7 @@ func (h *StatusHandler) StreamStatus(w http.ResponseWriter, r *http.Request) {
 			res := model.StatusResponse{
 				DisplayName:   user.DisplayName,
 				CustomMessage: status.CustomMessage,
+				UpdatedAt:     status.UpdatedAt,
 			}
 			if preset != nil {
 				res.Preset = *preset

@@ -37,6 +37,7 @@ const meta = {
       displayName: "山田太郎",
       preset: { id: "1", label: "会議中", color: "#3B82F6", displayOrder: 0 },
       customMessage: "",
+      updatedAt: new Date(Date.now() - 3 * 60_000).toISOString(),
     },
   },
   beforeEach: () => {
@@ -66,6 +67,7 @@ export const Empty: Story = {
       displayName: "山田太郎",
       preset: { id: "1", label: "", color: "#3B82F6", displayOrder: 0 },
       customMessage: "",
+      updatedAt: new Date(Date.now() - 3 * 60_000).toISOString(),
     },
   },
   play: async ({ canvasElement }) => {
@@ -74,6 +76,15 @@ export const Empty: Story = {
     await expect(
       canvas.getByText("まだ何も入力していません..."),
     ).toBeInTheDocument();
+  },
+};
+
+export const ShowsLastUpdated: Story = {
+  name: "最終更新時刻が相対表記で表示される",
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/^最終更新: /)).toBeInTheDocument();
   },
 };
 
@@ -94,6 +105,7 @@ export const UpdatesOnServerSentEvent: Story = {
         },
         custom_message: "",
         display_name: "山田太郎",
+        updated_at: new Date().toISOString(),
       }),
     } as MessageEvent);
 
