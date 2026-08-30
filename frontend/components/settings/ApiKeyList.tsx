@@ -41,6 +41,62 @@ const curlExample = (key: string) =>
     `  -d '{"preset_label":"会議中"}'`,
   ].join("\n");
 
+function CopyableCode({
+  label,
+  text,
+  copied,
+  onCopy,
+}: {
+  label: string;
+  text: string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <div className="space-y-1 min-w-0">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">{label}</Label>
+        {copied && (
+          <span className="text-[10px] text-green-600 dark:text-green-500">
+            コピーしました
+          </span>
+        )}
+      </div>
+      <div className="relative min-w-0">
+        <pre
+          role="button"
+          tabIndex={0}
+          title="タップでコピー"
+          onClick={onCopy}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onCopy();
+            }
+          }}
+          className="text-xs bg-muted rounded-md px-3 py-2.5 pr-11 overflow-x-auto whitespace-pre select-all cursor-pointer transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {text}
+        </pre>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="absolute top-1.5 right-1.5 bg-background"
+          onClick={onCopy}
+          aria-label={`${label}をコピー`}
+        >
+          {copied ? (
+            <Check className="w-4 h-4" />
+          ) : (
+            <Copy className="w-4 h-4" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function ApiKeyList({ token, initialApiKeys }: Props) {
   const [apiKeys, setApiKeys] = useState(initialApiKeys);
   const [isAdding, setIsAdding] = useState(false);
@@ -48,6 +104,8 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
     null,
   );
   const [copied, setCopied] = useState<"key" | "curl" | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<APIKeyResponse | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     register,
@@ -85,15 +143,16 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (
-      !confirm(
-        "このAPIキーを削除しますか？以降このキーでの更新はできなくなります。",
-      )
-    )
-      return;
-    await deleteApiKey(token, id);
-    setApiKeys(apiKeys.filter((k) => k.id !== id));
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteApiKey(token, deleteTarget.id);
+      setApiKeys(apiKeys.filter((k) => k.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const copy = async (text: string, which: "key" | "curl") => {
@@ -134,7 +193,7 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDelete(key.id)}
+                  onClick={() => setDeleteTarget(key)}
                   aria-label="削除"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -210,50 +269,20 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
           </DialogHeader>
 
           {createdKey && (
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <Label className="text-xs">APIキー</Label>
-                <div className="relative">
-                  <code className="block text-xs font-mono bg-muted rounded-md px-3 py-2.5 pr-11 break-all">
-                    {createdKey.key}
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="absolute top-1.5 right-1.5 bg-background"
-                    onClick={() => copy(createdKey.key, "key")}
-                    aria-label="APIキーをコピー"
-                  >
-                    {copied === "key" ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
+            <div className="space-y-4 min-w-0">
+              <CopyableCode
+                label="APIキー"
+                text={createdKey.key}
+                copied={copied === "key"}
+                onCopy={() => copy(createdKey.key, "key")}
+              />
 
-              <div className="space-y-1">
-                <Label className="text-xs">使用例（curl）</Label>
-                <div className="relative">
-                  <pre className="text-xs bg-muted rounded-md px-3 py-2.5 pr-11 overflow-x-auto">
-                    {curlExample(createdKey.key)}
-                  </pre>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="absolute top-1.5 right-1.5 bg-background"
-                    onClick={() => copy(curlExample(createdKey.key), "curl")}
-                    aria-label="curl コマンドをコピー"
-                  >
-                    {copied === "curl" ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
+              <CopyableCode
+                label="使用例（curl）"
+                text={curlExample(createdKey.key)}
+                copied={copied === "curl"}
+                onCopy={() => copy(curlExample(createdKey.key), "curl")}
+              />
 
               <p className="text-xs text-muted-foreground">
                 iOS ショートカットでの設定方法は{" "}
@@ -270,6 +299,40 @@ export default function ApiKeyList({ token, initialApiKeys }: Props) {
 
           <DialogFooter>
             <Button onClick={() => setCreatedKey(null)}>閉じる</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setDeleteTarget(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>APIキーを削除しますか？</DialogTitle>
+            <DialogDescription>
+              「{deleteTarget?.label}
+              」を削除すると、以降このキーでのステータス更新はできなくなります。
+              この操作は取り消せません。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={isDeleting}
+            >
+              キャンセル
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              削除
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

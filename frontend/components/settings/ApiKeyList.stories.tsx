@@ -90,24 +90,26 @@ export const CreateShowsKeyDialog: Story = {
 };
 
 export const Delete: Story = {
-  name: "削除するとキーが一覧から消える",
-  beforeEach: () => {
-    const original = window.confirm;
-    window.confirm = () => true;
-    return () => {
-      window.confirm = original;
-    };
-  },
+  name: "確認ダイアログで削除するとキーが一覧から消える",
   play: async ({ canvasElement }) => {
     mocked(deleteApiKey).mockResolvedValue(undefined);
 
     const canvas = within(canvasElement);
+    const body = within(document.body);
     const rows = canvas.getAllByRole("listitem");
     const zapierRow = rows.find((r) => r.textContent?.includes("Zapier"))!;
 
     await userEvent.click(
       within(zapierRow).getByRole("button", { name: "削除" }),
     );
+
+    // 自前の確認ダイアログが開く
+    await expect(
+      await body.findByText("APIキーを削除しますか？"),
+    ).toBeInTheDocument();
+
+    const dialog = body.getByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "削除" }));
 
     await expect(canvas.queryByText("Zapier")).not.toBeInTheDocument();
     await expect(canvas.getByText("iOS ショートカット")).toBeInTheDocument();
