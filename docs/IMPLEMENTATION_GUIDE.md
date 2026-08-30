@@ -10,13 +10,13 @@ Go の学習ポイントも各所に記載しています。
 ### 0-1. ツールのインストール
 
 - Go 1.22+ — `https://go.dev/dl/`
-- Node.js 20+ — https://nodejs.org/
-- Docker Desktop — https://www.docker.com/products/docker-desktop/
-- Git — https://git-scm.com/
+- Node.js 20+ — `https://nodejs.org/`
+- Docker Desktop — `https://www.docker.com/products/docker-desktop/`
+- Git — `https://git-scm.com/`
 
 ### 0-2. Supabase プロジェクトの作成
 
-1. https://supabase.com でプロジェクトを作成
+1. `https://supabase.com` でプロジェクトを作成
 2. 以下の情報を控えておく (後で環境変数に設定):
    - **Settings → API → Project URL** (例: `https://xxxx.supabase.co`)
    - **Settings → API → anon public key** (フロントエンドで使用)
@@ -671,7 +671,7 @@ volumes:
 
 ### 5-3. .env.example
 
-```
+```text
 PORT=8080
 DATABASE_URL=postgresql://postgres:password@localhost:5432/knockit?sslmode=disable
 SUPABASE_JWT_SECRET=your-supabase-jwt-secret
@@ -781,30 +781,33 @@ eventSource.addEventListener("status", (e) => {
 
 ## Phase 7: デプロイ
 
-### 7-1. バックエンド → Render
+### 7-1. バックエンド → Fly.io
 
-1. https://render.com でアカウント作成
-2. New → Web Service → GitHub リポジトリを接続
-3. 設定:
-   - **Root Directory**: `backend`
-   - **Runtime**: Docker
-   - **Instance Type**: Free
-4. 環境変数:
-   - `DATABASE_URL` — Supabase の接続文字列 (Settings → Database → Connection string → URI)
-   - `SUPABASE_JWT_SECRET` — Supabase の JWT Secret
-   - `ALLOWED_ORIGINS` — Vercel のドメイン (例: `https://knockit.vercel.app`)
-   - `ENVIRONMENT` — `production`
+1. [flyctl](https://fly.io/docs/flyctl/install/) をインストールし、`fly auth login`
+2. `backend/` ディレクトリで作業する（`backend/fly.toml` と `backend/Dockerfile` を使う）
+   - 既存アプリがなければ `fly launch --no-deploy`（`fly.toml` を上書きしない）
+3. シークレットを設定:
+   ```bash
+   fly secrets set \
+     DATABASE_URL="Supabase の接続文字列 (Settings → Database → Connection string → URI)" \
+     SUPABASE_JWT_SECRET="Supabase の JWT Secret" \
+     ALLOWED_ORIGINS="https://knockit.vercel.app" \
+     ENVIRONMENT="production"
+   ```
+4. `fly deploy` でデプロイ
+   - `fly.toml`: app `knockit` / リージョン `nrt` (東京) / ポート 8080 / ヘルスチェック `/healthz` /
+     `auto_stop_machines` で無アクセス時は 0 台まで停止
 
 ### 7-2. フロントエンド → Vercel
 
-1. https://vercel.com で GitHub リポジトリを接続
+1. `https://vercel.com` で GitHub リポジトリを接続
 2. 設定:
    - **Framework Preset**: Next.js
    - **Root Directory**: `frontend`
 3. 環境変数:
    - `NEXT_PUBLIC_SUPABASE_URL` — Supabase の Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase の anon public key
-   - `NEXT_PUBLIC_API_URL` — Render の URL (例: `https://knockit-api.onrender.com`)
+   - `NEXT_PUBLIC_API_URL` — Fly.io の URL (例: `https://knockit.fly.dev`)
 
 ### 7-3. Supabase Auth のリダイレクト設定
 
@@ -815,7 +818,7 @@ Supabase Dashboard → Authentication → URL Configuration:
 
 ### Phase 7 の動作確認
 
-- [ ] Render でバックエンドが起動し、ヘルスチェックが通る
+- [ ] Fly.io でバックエンドが起動し、ヘルスチェックが通る
 - [ ] Vercel でフロントエンドがデプロイされている
 - [ ] 本番環境で OAuth ログインが成功する
 - [ ] ステータス更新 → 公開ページリアルタイム更新が動作する
