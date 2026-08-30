@@ -39,5 +39,9 @@
     "prettier": "3.8.2",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "msw@2.13.3": true,
+    "unrs-resolver@1.11.1": true
   }
 }
