@@ -39,7 +39,7 @@
 
 ### 3.1 全体構成図
 
-```
+```text
 ┌─────────────────┐     ┌──────────────────┐     ┌────────────────┐
 │  Next.js         │────▶│  Go API (Fly.io) │────▶│ PostgreSQL     │
 │                  │     │                   │     │ (Supabase)     │
@@ -58,7 +58,7 @@
 
 ### 3.2 認証フロー
 
-```
+```text
 ユーザー → Next.js → Supabase Auth (Google OAuth)
                           │
                           ▼
@@ -76,7 +76,7 @@
 
 依存方向は **上から下** への一方向のみ。下位レイヤーは上位レイヤーを知らない。
 
-```
+```text
 ┌─────────────────────────────────┐
 │  Handler (プレゼンテーション層)    │  ← HTTP リクエスト/レスポンス
 │  - リクエスト受信・デコード       │
@@ -109,7 +109,7 @@
 
 ### 4.1 バックエンド
 
-```
+```text
 backend/
 ├── main.go                         # エントリーポイント (DI・ルーティング・サーバー起動)
 ├── internal/
@@ -151,7 +151,7 @@ backend/
 
 ### 4.2 フロントエンド
 
-```
+```text
 frontend/
 ├── app/
 │   ├── layout.tsx                   # ルートレイアウト (OGPメタデータ)
@@ -214,7 +214,7 @@ frontend/
 
 ### 5.1 ER図
 
-```
+```mermaid
 users ||--o{ room_statuses : "has"
 users ||--o{ presets : "owns"
 presets ||--o{ room_statuses : "referenced by"
@@ -360,7 +360,7 @@ presets ||--o{ room_statuses : "referenced by"
 
 専用端末（タブレットなど）で公開ページを常時表示し、ステータス変更を即座に反映する。
 
-```
+```text
 [ダッシュボード]             [Go API]                [公開ページ (タブレット)]
     │                         │                         │
     │ PUT /status/me          │                         │

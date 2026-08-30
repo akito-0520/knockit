@@ -25,7 +25,7 @@
 
 ## プロジェクト構成
 
-```
+```text
 knockit/
 ├── backend/              # Go API サーバー
 │   ├── main.go           # エントリーポイント (DI・ルーティング・サーバー起動)
@@ -109,18 +109,18 @@ npm run dev
 | ------------------- | ----------------------- | ----------------------------------------------- |
 | PORT                | APIサーバーのポート     | 8080                                            |
 | DATABASE_URL        | PostgreSQL 接続文字列   | postgresql://admin:admin@localhost:5432/knockit |
-| SUPABASE_URL        | Supabase の Project URL | https://xxxx.supabase.co                        |
+| SUPABASE_URL        | Supabase の Project URL | `https://xxxx.supabase.co`                      |
 | SUPABASE_JWT_SECRET | Supabase の JWT Secret  | your-jwt-secret                                 |
-| ALLOWED_ORIGINS     | CORS 許可オリジン       | http://localhost:3000                           |
+| ALLOWED_ORIGINS     | CORS 許可オリジン       | `http://localhost:3000`                         |
 
 ### フロントエンド (`frontend/.env.local`)
 
-| 変数名                        | 説明                        | 例                       |
-| ----------------------------- | --------------------------- | ------------------------ |
-| NEXT_PUBLIC_SUPABASE_URL      | Supabase の Project URL     | https://xxxx.supabase.co |
-| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase の anon public key | eyJhbGci...              |
-| NEXT_PUBLIC_API_URL           | バックエンドの URL          | http://localhost:8080    |
-| NEXT_PUBLIC_SITE_URL          | フロントエンドの URL        | http://localhost:3000    |
+| 変数名                        | 説明                        | 例                         |
+| ----------------------------- | --------------------------- | -------------------------- |
+| NEXT_PUBLIC_SUPABASE_URL      | Supabase の Project URL     | `https://xxxx.supabase.co` |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase の anon public key | eyJhbGci...                |
+| NEXT_PUBLIC_API_URL           | バックエンドの URL          | `http://localhost:8080`    |
+| NEXT_PUBLIC_SITE_URL          | フロントエンドの URL        | `http://localhost:3000`    |
 
 ## API エンドポイント
 

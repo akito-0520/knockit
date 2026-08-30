@@ -787,6 +787,7 @@ eventSource.addEventListener("status", (e) => {
 2. `backend/` ディレクトリで作業する（`backend/fly.toml` と `backend/Dockerfile` を使う）
    - 既存アプリがなければ `fly launch --no-deploy`（`fly.toml` を上書きしない）
 3. シークレットを設定:
+
    ```bash
    fly secrets set \
      DATABASE_URL="Supabase の接続文字列 (Settings → Database → Connection string → URI)" \
@@ -794,6 +795,7 @@ eventSource.addEventListener("status", (e) => {
      ALLOWED_ORIGINS="https://knockit.vercel.app" \
      ENVIRONMENT="production"
    ```
+
 4. `fly deploy` でデプロイ
    - `fly.toml`: app `knockit` / リージョン `nrt` (東京) / ポート 8080 / ヘルスチェック `/healthz` /
      `auto_stop_machines` で無アクセス時は 0 台まで停止
