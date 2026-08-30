@@ -41,6 +41,7 @@ export const SelectPresetAndSubmit: Story = {
       displayName: "山田太郎",
       preset: presets[0],
       customMessage: "",
+      updatedAt: new Date().toISOString(),
     });
 
     const canvas = within(canvasElement);
@@ -68,6 +69,7 @@ export const CustomMessageOnly: Story = {
       displayName: "山田太郎",
       preset: presets[0],
       customMessage: "会議中です",
+      updatedAt: new Date().toISOString(),
     });
 
     const canvas = within(canvasElement);
@@ -95,6 +97,7 @@ export const WithCurrentStatus: Story = {
       displayName: "山田太郎",
       preset: presets[0],
       customMessage: "オフラインです",
+      updatedAt: new Date().toISOString(),
     },
   },
   play: async ({ canvasElement }) => {

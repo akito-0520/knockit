@@ -30,6 +30,7 @@ describe("getPublicStatus", () => {
             display_order: 0,
           },
           custom_message: "",
+          updated_at: "2026-08-30T11:57:00Z",
         },
       }),
     );
@@ -44,6 +45,7 @@ describe("getPublicStatus", () => {
       displayName: "山田太郎",
       preset: { id: "1", label: "会議中", color: "#3B82F6", displayOrder: 0 },
       customMessage: "",
+      updatedAt: "2026-08-30T11:57:00Z",
     });
   });
 });
@@ -62,6 +64,7 @@ describe("getMyStatus", () => {
             display_order: 0,
           },
           custom_message: "",
+          updated_at: "2026-08-30T11:57:00Z",
         },
       }),
     );
@@ -94,6 +97,7 @@ describe("updateStatus", () => {
             display_order: 0,
           },
           custom_message: "会議中です",
+          updated_at: "2026-08-30T11:57:00Z",
         },
       }),
     );

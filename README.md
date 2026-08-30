@@ -53,6 +53,7 @@ knockit/
 ├── docker-compose.yml    # 開発用 (API + PostgreSQL)
 └── docs/
     ├── ARCHITECTURE.md   # 設計ドキュメント
+    ├── CHANGELOG.md      # バージョンごとの変更履歴
     └── IMPLEMENTATION_GUIDE.md
 ```
 
@@ -166,6 +167,7 @@ npm run dev
 | ファイル                                                  | 内容                                               |
 | --------------------------------------------------------- | -------------------------------------------------- |
 | [ARCHITECTURE.md](./docs/ARCHITECTURE.md)                 | 全体設計 (技術スタック, DB設計, API設計, 画面構成)  |
+| [CHANGELOG.md](./docs/CHANGELOG.md)                       | バージョンごとの変更履歴                            |
 | [IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) | 段階的な実装手順書 (Phase 0〜7)                    |
 
 ## ライセンス

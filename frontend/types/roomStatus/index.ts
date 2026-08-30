@@ -10,6 +10,7 @@ type StatusResponse = {
   displayName: string;
   preset: PresetResponse;
   customMessage: string;
+  updatedAt: string;
 };
 
 type UpdateStatusRequest = {

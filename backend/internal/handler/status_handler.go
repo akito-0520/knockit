@@ -63,6 +63,7 @@ func (h *StatusHandler) GetPublicStatus(w http.ResponseWriter, r *http.Request) 
 	res := model.StatusResponse{
 		DisplayName:   user.DisplayName,
 		CustomMessage: status.CustomMessage,
+		UpdatedAt:     status.UpdatedAt,
 	}
 	if preset != nil {
 		res.Preset = *preset
@@ -123,6 +124,7 @@ func (h *StatusHandler) GetMyStatus(w http.ResponseWriter, r *http.Request) {
 	res := model.StatusResponse{
 		DisplayName:   user.DisplayName,
 		CustomMessage: status.CustomMessage,
+		UpdatedAt:     status.UpdatedAt,
 	}
 	if preset != nil {
 		res.Preset = *preset
@@ -193,6 +195,7 @@ func (h *StatusHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	res := model.StatusResponse{
 		DisplayName:   user.DisplayName,
 		CustomMessage: status.CustomMessage,
+		UpdatedAt:     status.UpdatedAt,
 	}
 	if preset != nil {
 		res.Preset = *preset
