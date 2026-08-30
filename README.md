@@ -49,8 +49,7 @@ knockit/
 │   │   └── auth/callback/# OAuth コールバック
 │   ├── components/       # UIコンポーネント
 │   ├── lib/              # API・Supabase・ユーティリティ
-│   ├── types/            # TypeScript 型定義
-│   └── Dockerfile
+│   └── types/            # TypeScript 型定義
 ├── docker-compose.yml    # 開発用 (API + PostgreSQL)
 └── docs/
     ├── ARCHITECTURE.md   # 設計ドキュメント

@@ -1,5 +1,5 @@
-// サーバーサイド（Docker内）→ backend サービス名
-// クライアントサイド（ブラウザ）→ localhost
+// サーバーサイド（SSR）→ API_URL（内部向けエンドポイント）
+// クライアントサイド（ブラウザ）→ NEXT_PUBLIC_API_URL
 export const API_URL =
   typeof window === "undefined"
     ? (process.env.API_URL ?? "http://localhost:8080")
